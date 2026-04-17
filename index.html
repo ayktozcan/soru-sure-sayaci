@@ -335,6 +335,59 @@
       margin:0 auto;
     }
 
+
+    /* Oturum buton düzeni */
+    #panel-session .question-box .btn-row{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:12px;
+    }
+
+    #nextQuestionBtn{
+      width:100%;
+      max-width:760px;
+      margin-left:auto;
+      margin-right:auto;
+      text-align:center;
+      justify-content:center;
+      display:flex;
+    }
+
+    #pauseBtn,
+    #undoBtn{
+      display:flex;
+      width:100%;
+      max-width:520px;
+      margin-left:auto;
+      margin-right:auto;
+      text-align:center;
+      justify-content:center;
+    }
+
+    #saveSessionBtn{
+      display:flex;
+      width:100%;
+      max-width:420px;
+      margin-left:auto;
+      margin-right:auto;
+      text-align:center;
+      justify-content:center;
+    }
+
+    @media (max-width:1000px){
+      #nextQuestionBtn{
+        max-width:100%;
+      }
+      #pauseBtn,
+      #undoBtn{
+        max-width:300px;
+      }
+      #saveSessionBtn{
+        max-width:300px;
+      }
+    }
+
 </style>
 </head>
 <body>
