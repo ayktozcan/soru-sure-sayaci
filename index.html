@@ -1,404 +1,1539 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Soru Sayaç">
-  <title>Soru Sayaç</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KPSS Çalışma Takip Paneli</title>
   <style>
     :root{
-      --bg:#f5f7fb;--card:#ffffff;--text:#101828;--muted:#667085;--line:#d0d5dd;--blue:#2563eb;--green:#16a34a;--red:#dc2626;
+      --bg:#0f172a;
+      --panel:#111827;
+      --panel-2:#1f2937;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --accent:#2563eb;
+      --accent-2:#1d4ed8;
+      --ok:#16a34a;
+      --bad:#dc2626;
+      --warn:#d97706;
+      --card:#0b1220;
+      --border:#334155;
+      --table-blue:#89A4D0;
+      --table-light:#E8EDF6;
     }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
-    .wrap{max-width:800px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top)) 12px calc(18px + env(safe-area-inset-bottom))}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px rgba(16,24,40,.06)}
-    h1,h2,p{margin:0} h1{font-size:1.3rem} h2{font-size:1.05rem;margin-bottom:10px}
-    .sub{margin-top:6px;color:var(--muted);font-size:.95rem;line-height:1.4}
-    .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-    @media(max-width:640px){.grid,.grid3{grid-template-columns:1fr}}
-    label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:6px}
-    input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:1rem;background:#fff;color:var(--text)}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-    button{border:none;border-radius:14px;padding:14px 16px;font-size:1rem;font-weight:700}
-    .primary{background:var(--blue);color:#fff}
-    .soft{background:#eef2ff;color:#1d4ed8}
-    .danger{background:#fef2f2;color:var(--red);border:1px solid #fecaca}
-    .tap{margin-top:12px;border-radius:22px;border:2px dashed #93c5fd;background:#eff6ff;min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px}
-    .tap.disabled{opacity:.55}
-    .timer{font-size:3rem;font-weight:800;letter-spacing:.02em}
-    .q{margin-top:10px;font-size:1.05rem;color:#1d4ed8;font-weight:700}
-    .hint{margin-top:8px;color:var(--muted)}
-    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .stat{background:#fafafa;border:1px solid var(--line);border-radius:14px;padding:12px}
-    .k{font-size:.85rem;color:var(--muted)} .v{margin-top:8px;font-size:1.1rem;font-weight:800}
-    .pill{display:inline-block;padding:7px 10px;border-radius:999px;background:#eef2ff;color:#1d4ed8;font-size:.88rem;margin-top:10px}
-    .list{display:grid;gap:8px;margin-top:10px}
-    .item{display:flex;justify-content:space-between;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:#fafafa}
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      background:linear-gradient(180deg,#0b1120,#111827);
+      color:var(--text);
+    }
+    .app{display:flex;min-height:100vh}
+    .sidebar{
+      width:290px;background:rgba(15,23,42,.98);border-right:1px solid var(--border);
+      padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto;
+      transition:width .2s ease,padding .2s ease,transform .2s ease;
+    }
+    .sidebar.collapsed{width:82px;padding:18px 10px}
+    .brand{
+      display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:10px;
+      border:1px solid var(--border);border-radius:16px;background:rgba(37,99,235,.08);
+    }
+    .brand-badge{
+      width:40px;height:40px;border-radius:12px;background:var(--accent);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+    }
+    .sidebar.collapsed .brand-text,.sidebar.collapsed .nav-label,.sidebar.collapsed .nav-sub,
+    .sidebar.collapsed .section-title,.sidebar.collapsed .toggle-label{display:none}
+    .collapse-btn{
+      width:100%;border:none;background:var(--panel-2);color:var(--text);
+      padding:10px 12px;border-radius:12px;cursor:pointer;margin-bottom:14px;
+    }
+    .section-title{
+      color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;
+      margin:16px 8px 8px;
+    }
+    .nav{display:flex;flex-direction:column;gap:8px}
+    .nav-btn{
+      width:100%;text-align:left;border:1px solid var(--border);background:transparent;color:var(--text);
+      border-radius:14px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;gap:12px;
+    }
+    .nav-btn.active,.nav-btn:hover{background:rgba(37,99,235,.12);border-color:#3b82f6}
+    .nav-icon{
+      width:34px;height:34px;border-radius:10px;background:var(--panel-2);
+      display:flex;align-items:center;justify-content:center;flex:0 0 auto;
+    }
+    .nav-label{font-weight:600}
+    .nav-sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .toggle-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .toggle-item{
+      display:flex;align-items:center;gap:10px;background:var(--panel-2);
+      padding:10px 12px;border-radius:12px;border:1px solid var(--border);
+    }
+    .toggle-item input{accent-color:var(--accent)}
+    .main{flex:1;padding:22px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+    .title h1{margin:0;font-size:28px}
+    .title p{margin:6px 0 0;color:var(--muted)}
+    .pill{
+      border:1px solid var(--border);background:rgba(255,255,255,.03);
+      padding:10px 12px;border-radius:999px;color:var(--muted);
+    }
+    .panel{
+      display:none;background:rgba(15,23,42,.74);border:1px solid var(--border);
+      border-radius:22px;padding:18px;box-shadow:0 10px 30px rgba(0,0,0,.18);
+    }
+    .panel.active{display:block}
+    .grid{display:grid;gap:14px}
+    .grid.cards{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+    .card{
+      background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;
+    }
+    .card h3,.card h4{margin:0 0 8px}
+    .stat{font-size:28px;font-weight:700}
     .muted{color:var(--muted)}
-    .history{display:grid;gap:10px;margin-top:10px}
-    .hitem{border:1px solid var(--line);border-radius:14px;padding:12px;background:#fafafa}
-    canvas{width:100%;height:260px;border:1px solid var(--line);border-radius:16px;background:#fff;display:block}
-    .note{font-size:.84rem;color:var(--muted);line-height:1.5}
+    .row{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .col-4{grid-column:span 4}
+    .col-5{grid-column:span 5}
+    .col-6{grid-column:span 6}
+    .col-7{grid-column:span 7}
+    .col-8{grid-column:span 8}
+    .col-12{grid-column:span 12}
+    label{display:block;font-size:14px;margin-bottom:6px;color:#cbd5e1}
+    input,select,textarea{
+      width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--border);
+      background:#0b1220;color:var(--text);outline:none;
+    }
+    textarea{min-height:96px;resize:vertical}
+    .btn-row{display:flex;gap:10px;flex-wrap:wrap}
+    button.action{
+      border:none;border-radius:12px;padding:12px 14px;cursor:pointer;color:white;font-weight:600;background:var(--accent);
+    }
+    button.secondary{background:#374151}
+    button.success{background:var(--ok)}
+    button.warning{background:var(--warn)}
+    button.danger{background:var(--bad)}
+    .question-box{
+      border:1px dashed #3b82f6;border-radius:20px;padding:18px;background:rgba(37,99,235,.08);display:grid;gap:10px;
+    }
+    .timer{font-size:42px;font-weight:800;letter-spacing:.03em}
+    .bigTap{
+      width:100%;padding:20px;border-radius:18px;border:1px solid #60a5fa;background:rgba(59,130,246,.12);
+      color:var(--text);font-size:18px;font-weight:700;cursor:pointer;
+    }
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:12px 10px;border-bottom:1px solid #233046;text-align:left;font-size:14px;vertical-align:top}
+    th{color:#cbd5e1}
+    .badge{
+      display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;
+    }
+    .b-ok{background:rgba(22,163,74,.18);color:#86efac}
+    .b-bad{background:rgba(220,38,38,.18);color:#fca5a5}
+    .b-blank{background:rgba(217,119,6,.18);color:#fdba74}
+    .list{
+      max-height:320px;overflow:auto;border:1px solid var(--border);border-radius:16px;background:#0b1220;
+    }
+    .list-item{
+      padding:12px 14px;border-bottom:1px solid #233046;display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+    }
+    .list-item:last-child{border-bottom:none}
+    .mini{font-size:12px;color:var(--muted)}
+    canvas{
+      width:100%;height:320px;background:#09101d;border:1px solid var(--border);border-radius:16px;
+    }
+    .footer-note{margin-top:14px;color:var(--muted);font-size:13px}
+    .two-col{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    .subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+    .subject-tab{
+      border:1px solid var(--border);background:#0b1220;color:var(--text);padding:10px 12px;border-radius:12px;cursor:pointer;
+    }
+    .subject-tab.active{background:rgba(37,99,235,.16);border-color:#3b82f6}
+    .repeat-wrap{overflow:auto;border-radius:18px;border:1px solid var(--border);background:#fff}
+    .repeat-table{
+      width:100%;border-collapse:collapse;color:#111827;min-width:860px;font-family:"Times New Roman",serif;
+    }
+    .repeat-table th,.repeat-table td{
+      border:1px solid #3b4e6b;padding:8px 8px;font-size:16px;vertical-align:middle;
+    }
+    .repeat-table thead th{
+      background:#fff;color:#111827;font-weight:700;text-align:center;
+    }
+    .repeat-table .head-lesson{font-size:20px;text-align:left}
+    .repeat-table tbody tr:nth-child(odd) td{background:var(--table-blue)}
+    .repeat-table tbody tr:nth-child(even) td{background:var(--table-light)}
+    .repeat-table .col-no{width:58px;text-align:center}
+    .repeat-table .col-topic{min-width:360px}
+    .repeat-table input{
+      width:100%;border:none;background:transparent;color:#111827;padding:4px 2px;border-radius:0;font-family:"Times New Roman",serif;font-size:16px;
+    }
+    .repeat-table input:focus{outline:2px solid #2563eb;background:#fff}
+    .repeat-toolbar{
+      display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px
+    }
+    .repeat-summary{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px;
+    }
+
+
+    .resource-card-click{cursor:pointer;transition:transform .15s ease,border-color .15s ease}
+    .resource-card-click:hover{transform:translateY(-2px);border-color:#3b82f6}
+    .progress-shell{height:10px;background:#0b1220;border:1px solid var(--border);border-radius:999px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--accent)}
+
+    .resource-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .resource-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
+
+    @media (max-width:1000px){
+      .row{grid-template-columns:repeat(6,1fr)}
+      .col-4,.col-5,.col-6,.col-7,.col-8{grid-column:span 6}
+      .sidebar{position:fixed;z-index:10;transform:translateX(0)}
+      .sidebar.collapsed{transform:translateX(-100%)}
+      .main{padding:16px;margin-left:0}
+      .two-col{grid-template-columns:1fr}
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="card">
-    <h1>Soru Sayaç</h1>
-    <p class="sub">iPhone Safari için sadeleştirilmiş sürüm. Her soru bitince büyük alana dokun.</p>
-  </div>
-
-  <div class="card">
-    <h2>Yeni çalışma</h2>
-    <div class="grid3">
-      <div>
-        <label for="name">Çalışma adı</label>
-        <input id="name" type="text" placeholder="Örn: Türkçe Deneme">
-      </div>
-      <div>
-        <label for="count">Soru sayısı</label>
-        <input id="count" type="number" min="1" max="300" value="25" inputmode="numeric">
-      </div>
-      <div>
-        <label for="warn">Uyarı eşiği (sn)</label>
-        <input id="warn" type="number" min="10" max="600" value="120" inputmode="numeric">
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-badge">KP</div>
+      <div class="brand-text">
+        <div style="font-weight:700">KPSS Çalışma Paneli</div>
+        <div class="mini">Soru süre sayacı takibi</div>
       </div>
     </div>
+    <button class="collapse-btn" id="collapseBtn">Menüyü Daralt / Aç</button>
 
-    <div class="row">
-      <button id="startBtn" class="primary">Başlat</button>
-      <button id="pauseBtn" class="soft">Duraklat</button>
-      <button id="undoBtn" class="soft">Son soruyu geri al</button>
-      <button id="resetBtn" class="danger">Sıfırla</button>
-    </div>
+    <div class="section-title">Sekmeler</div>
+    <nav class="nav" id="nav"></nav>
 
-    <div class="pill" id="status">Hazır</div>
+    <div class="section-title">Sekme Yönetimi</div>
+    <div class="toggle-list" id="tabToggles"></div>
+  </aside>
 
-    <div class="tap disabled" id="tapBox" role="button" tabindex="0">
-      <div>
-        <div class="timer" id="timer">00:00.0</div>
-        <div class="q" id="qLabel">Başlatınca soru süresi burada akar</div>
-        <div class="hint" id="hint">Her soru bitince bu alana dokun</div>
+  <main class="main">
+    <div class="topbar">
+      <div class="title">
+        <h1>KPSS çalışma takip sistemi</h1>
+        <p>Ders, soru türü, süre, doğru-yanlış-boş, not ve grafik takibi.</p>
       </div>
+      <div class="pill" id="todaySummary">Bugün kayıt yok</div>
     </div>
 
-    <div class="stats">
-      <div class="stat"><div class="k">Mevcut soru</div><div class="v" id="cur">-</div></div>
-      <div class="stat"><div class="k">Toplam süre</div><div class="v" id="tot">00:00</div></div>
-      <div class="stat"><div class="k">Ortalama</div><div class="v" id="avg">00:00</div></div>
-      <div class="stat"><div class="k">En uzun soru</div><div class="v" id="max">00:00</div></div>
-    </div>
+    <section class="panel active" id="panel-dashboard">
+      <div class="grid cards">
+        <div class="card"><h3>Toplam Çalışma</h3><div class="stat" id="statSessions">0</div><div class="muted">Kaydedilmiş oturum</div></div>
+        <div class="card"><h3>Toplam Soru</h3><div class="stat" id="statQuestions">0</div><div class="muted">Tüm kayıtlar</div></div>
+        <div class="card"><h3>Ortalama Süre</h3><div class="stat" id="statAvgSec">0 sn</div><div class="muted">Soru başına</div></div>
+        <div class="card"><h3>Ortalama Net</h3><div class="stat" id="statNet">0</div><div class="muted">Tüm oturumlar</div></div>
+      </div>
 
-    <div class="list" id="times"></div>
-  </div>
+      <div class="two-col" style="margin-top:14px">
+        <div class="card">
+          <h3>Son 10 çalışma grafiği</h3>
+          <canvas id="dashboardChart" width="900" height="320"></canvas>
+        </div>
+        <div class="card">
+          <h3>Hızlı özet</h3>
+          <div class="list" id="quickInsights"></div>
+        </div>
+      </div>
+    </section>
 
-  <div class="card">
-    <h2>Performans grafiği</h2>
-    <canvas id="chart" width="780" height="260"></canvas>
-    <p class="note" style="margin-top:10px">Grafik kayıtlı çalışmaların ortalama soru sürelerini gösterir.</p>
-  </div>
+    <section class="panel" id="panel-session">
+      <div class="row">
+        <div class="col-4">
+          <div class="card">
+            <h3>Oturum bilgileri</h3>
+            <label>Çalışma adı</label>
+            <input id="studyName" placeholder="Örn: 2022 KPSS Türkçe denemesi" />
+            <label style="margin-top:10px">Ders</label>
+            <select id="lessonSelect"></select>
+            <label style="margin-top:10px">Soru türü</label>
+            <select id="typeSelect"></select>
+            <label style="margin-top:10px">Toplam soru</label>
+            <input id="questionCount" type="number" min="1" value="25" />
+            <label style="margin-top:10px">Uyarı eşiği (saniye)</label>
+            <input id="warningThreshold" type="number" min="10" value="90" />
+            <div class="btn-row" style="margin-top:14px">
+              <button class="action" id="startBtn">Başlat</button>
+              <button class="action secondary" id="pauseBtn">Duraklat</button>
+              <button class="action warning" id="undoBtn">Geri Al</button>
+              <button class="action danger" id="resetBtn">Sıfırla</button>
+            </div>
+          </div>
+        </div>
 
-  <div class="card">
-    <h2>Geçmiş çalışmalar</h2>
-    <div class="row">
-      <button id="exportBtn" class="soft">Verileri dışa aktar</button>
-      <button id="importBtn" class="soft">Veri içe al</button>
-      <button id="clearBtn" class="danger">Geçmişi sil</button>
-      <button id="installNoteBtn" class="soft">Ana ekrana ekleme notu</button>
-    </div>
-    <input id="fileInput" type="file" accept="application/json" style="display:none">
-    <div class="history" id="history"></div>
-  </div>
+        <div class="col-8">
+          <div class="card question-box">
+            <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <div class="muted">Anlık durum</div>
+                <div style="font-size:22px;font-weight:700" id="questionLabel">Soru 1 / 25</div>
+              </div>
+              <div>
+                <div class="muted">Toplam süre</div>
+                <div style="font-size:22px;font-weight:700" id="totalTime">00:00</div>
+              </div>
+            </div>
+            <div class="timer" id="timer">00:00</div>
+            <button class="bigTap" id="nextQuestionBtn">Soruyu bitirdim, kaydet ve sonraki soruya geç</button>
+
+            <div class="row">
+              <div class="col-4">
+                <label>Sonuç</label>
+                <select id="resultSelect">
+                  <option value="D">Doğru</option>
+                  <option value="Y">Yanlış</option>
+                  <option value="B">Boş</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label>Zorluk</label>
+                <select id="difficultySelect">
+                  <option value="Kolay">Kolay</option>
+                  <option value="Orta">Orta</option>
+                  <option value="Zor">Zor</option>
+                </select>
+              </div>
+              <div class="col-4">
+                <label>Soru no (elle düzeltme)</label>
+                <input id="manualQuestionNo" type="number" min="1" value="1" />
+              </div>
+              <div class="col-12">
+                <label>Not</label>
+                <textarea id="questionNote" placeholder="Örn: Yer değiştirme sorusunda iki şık arasında kaldım."></textarea>
+              </div>
+            </div>
+
+            <div class="btn-row">
+              <button class="action success" id="saveSessionBtn">Oturumu Kaydet</button>
+            </div>
+            <div class="footer-note">Her soru sonunda butona bas. Oturum bitince “Oturumu Kaydet” ile geçmişe eklenir.</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <h3>Bu oturumdaki soru kayıtları</h3>
+            <div class="list" id="currentSessionList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-history">
+      <div class="card">
+        <h3>Geçmiş çalışmalar</h3>
+        <div class="btn-row" style="margin-bottom:14px">
+          <button class="action secondary" id="exportBtn">Verileri Dışa Aktar</button>
+          <button class="action secondary" id="importBtn">Veri İçe Al</button>
+          <input id="importFile" type="file" accept=".json" style="display:none" />
+          <button class="action danger" id="clearHistoryBtn">Tüm Geçmişi Sil</button>
+        </div>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Tarih</th>
+                <th>Çalışma</th>
+                <th>Ders / Tür</th>
+                <th>Soru</th>
+                <th>Doğru</th>
+                <th>Yanlış</th>
+                <th>Boş</th>
+                <th>Net</th>
+                <th>Ort. Süre</th>
+                <th>İşlem</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-analytics">
+      <div class="two-col">
+        <div class="card">
+          <h3>Ortalama süre grafiği</h3>
+          <canvas id="avgChart" width="900" height="320"></canvas>
+        </div>
+        <div class="card">
+          <h3>Net grafiği</h3>
+          <canvas id="netChart" width="900" height="320"></canvas>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <h3>Konu performansı</h3>
+        <div style="overflow:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Ders</th>
+                <th>Soru Türü</th>
+                <th>Toplam Soru</th>
+                <th>Ort. Süre</th>
+                <th>Doğru %</th>
+                <th>En Sık Zorluk</th>
+              </tr>
+            </thead>
+            <tbody id="performanceBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-repetition">
+      <div class="card">
+        <h3>Konu tekrar takibi</h3>
+        <p class="muted">Her ders için ayrı tekrar tablosu. Hücrelere doğrudan tarih girilir. Veriler cihazda saklanır.</p>
+
+        <div class="subject-tabs" id="repSubjectTabs"></div>
+
+        <div class="repeat-summary">
+          <div class="card"><h4>Toplam Konu</h4><div class="stat" id="repTotalTopics">0</div></div>
+          <div class="card"><h4>En az 1 tekrar</h4><div class="stat" id="repStartedTopics">0</div></div>
+          <div class="card"><h4>4 tekrar tamam</h4><div class="stat" id="repCompletedTopics">0</div></div>
+          <div class="card"><h4>Boş konu</h4><div class="stat" id="repEmptyTopics">0</div></div>
+        </div>
+
+        <div class="repeat-toolbar">
+          <button class="action secondary" id="addTopicBtn">Yeni Konu Ekle</button>
+          <button class="action secondary" id="resetCurrentSubjectBtn">Bu Ders Tablosunu Sıfırla</button>
+        </div>
+
+        <div class="repeat-wrap">
+          <table class="repeat-table" id="repeatTable">
+            <thead>
+              <tr>
+                <th class="col-no"></th>
+                <th class="head-lesson" id="repeatLessonName">TARİH</th>
+                <th>1. TEKRAR</th>
+                <th>2. TEKRAR</th>
+                <th>3. TEKRAR</th>
+                <th>4. TEKRAR</th>
+              </tr>
+            </thead>
+            <tbody id="repeatTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+
+    
+    <section class="panel" id="panel-resources">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+          <div>
+            <h3>Çözülen kaynaklar</h3>
+            <p class="muted">Kaynak ekle, kaynağa tıkla, konu başlıklarını ve çözülen soru sayılarını ayrı ayrı takip et.</p>
+          </div>
+          <div class="btn-row">
+            <button class="action secondary" id="backToResourceListBtn" style="display:none">Kaynak Listesine Dön</button>
+            <button class="action secondary" id="addResourceCardBtn">Yeni Kaynak Ekle</button>
+            <button class="action danger" id="clearResourcesBtn">Tüm Kaynakları Sil</button>
+          </div>
+        </div>
+
+        <div id="resourceListView">
+          <div class="subject-tabs" id="resourceLessonTabs"></div>
+          <div class="resource-summary">
+            <div class="card"><h4>Toplam Kaynak</h4><div class="stat" id="resTotalRows">0</div></div>
+            <div class="card"><h4>Toplam Çözülen Soru</h4><div class="stat" id="resTotalQuestions">0</div></div>
+            <div class="card"><h4>En Çok Çalışılan Ders</h4><div class="stat" id="resTopLesson">-</div></div>
+            <div class="card"><h4>En Çok İlerlenen Kaynak</h4><div class="stat" id="resTopSource">-</div></div>
+          </div>
+          <div id="resourceCards" class="grid cards"></div>
+        </div>
+
+        <div id="resourceDetailView" style="display:none">
+          <div class="row">
+            <div class="col-4">
+              <div class="card">
+                <h3>Kaynak bilgisi</h3>
+                <label>Ders</label>
+                <select id="detailLesson"></select>
+                <label style="margin-top:10px">Kaynak adı</label>
+                <input id="detailSourceName" placeholder="Örn: Benim Hocam Paragraf" />
+                <label style="margin-top:10px">Yayın / Seri</label>
+                <input id="detailPublisher" placeholder="Örn: Benim Hocam" />
+                <label style="margin-top:10px">Not</label>
+                <textarea id="detailResourceNote" placeholder="Kaynak hakkında kısa not"></textarea>
+                <div class="btn-row" style="margin-top:12px">
+                  <button class="action success" id="saveResourceMetaBtn">Kaynak Bilgisini Kaydet</button>
+                  <button class="action danger" id="deleteCurrentResourceBtn">Bu Kaynağı Sil</button>
+                </div>
+              </div>
+            </div>
+            <div class="col-8">
+              <div class="card">
+                <h3 id="detailTitle">Kaynak detayları</h3>
+                <div class="resource-summary">
+                  <div class="card"><h4>Toplam Konu</h4><div class="stat" id="detailTopicCount">0</div></div>
+                  <div class="card"><h4>Hedef Soru</h4><div class="stat" id="detailTargetTotal">0</div></div>
+                  <div class="card"><h4>Çözülen Soru</h4><div class="stat" id="detailSolvedTotal">0</div></div>
+                  <div class="card"><h4>İlerleme</h4><div class="stat" id="detailProgress">0%</div></div>
+                </div>
+                <div class="resource-toolbar">
+                  <button class="action secondary" id="addTopicRowBtn">Yeni Konu Ekle</button>
+                </div>
+                <div style="overflow:auto">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>No</th>
+                        <th>Konu Başlığı</th>
+                        <th>Hedef Soru</th>
+                        <th>Çözülen Soru</th>
+                        <th>Durum</th>
+                        <th>Not</th>
+                        <th>İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody id="resourceTopicBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-settings">
+      <div class="row">
+        <div class="col-6">
+          <div class="card">
+            <h3>Sekme ayarları</h3>
+            <p class="muted">İstediğin sekmeleri kapatıp açabilirsin. Soldaki menü buna göre güncellenir.</p>
+            <div class="toggle-list" id="settingsToggles"></div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card">
+            <h3>KPSS modülleri</h3>
+            <ul class="muted" style="line-height:1.8">
+              <li>Türkçe, Matematik, Tarih, Coğrafya, Vatandaşlık, Güncel</li>
+              <li>Soru bazlı süre ve net takibi</li>
+              <li>Konu tekrar tabloları</li>
+              <li>Yerel kayıt: Veriler cihazındaki tarayıcıda saklanır</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 </div>
 
 <script>
-(function(){
-  var STORAGE_KEY = 'soru-sayac-history-v3';
-  var el = {
-    name: document.getElementById('name'), count: document.getElementById('count'), warn: document.getElementById('warn'),
-    startBtn: document.getElementById('startBtn'), pauseBtn: document.getElementById('pauseBtn'), undoBtn: document.getElementById('undoBtn'), resetBtn: document.getElementById('resetBtn'),
-    status: document.getElementById('status'), tapBox: document.getElementById('tapBox'), timer: document.getElementById('timer'), qLabel: document.getElementById('qLabel'), hint: document.getElementById('hint'),
-    cur: document.getElementById('cur'), tot: document.getElementById('tot'), avg: document.getElementById('avg'), max: document.getElementById('max'), times: document.getElementById('times'),
-    history: document.getElementById('history'), chart: document.getElementById('chart'), exportBtn: document.getElementById('exportBtn'), importBtn: document.getElementById('importBtn'), clearBtn: document.getElementById('clearBtn'), fileInput: document.getElementById('fileInput'), installNoteBtn: document.getElementById('installNoteBtn')
+(() => {
+  const appKey = 'kpssTrackerData_v3';
+  const lessonTypes = {
+    'Türkçe': ['Paragraf', 'Cümlede Anlam', 'Sözcükte Anlam', 'Dil Bilgisi', 'Sözel Mantık'],
+    'Matematik': ['Problem', 'Temel İşlem', 'Geometri', 'Grafik', 'Mantık'],
+    'Tarih': ['Konu Tekrarı', 'Bilgi Sorusu', 'Kronoloji', 'Karma'],
+    'Coğrafya': ['Harita', 'Bilgi Sorusu', 'Karma'],
+    'Vatandaşlık': ['Kavram', 'Bilgi Sorusu', 'Karma'],
+    'Güncel': ['Güncel Bilgi', 'Karma']
   };
 
-  var state = resetState();
-  var timerId = null;
-  var tapLock = false;
+  const repetitionTemplates = {
+    'Türkçe': [
+      'Sözcükte Anlam','Cümlede Anlam','Paragrafta Konu','Paragrafta Ana Düşünce','Paragrafta Yardımcı Düşünce',
+      'Paragraf Yer Değiştirme','Paragraf Tamamlama','Anlatım Bozukluğu','Noktalama İşaretleri','Yazım Kuralları',
+      'Sözcükte Yapı','Sözcük Türleri','Fiiller','Cümlenin Ögeleri','Fiilimsi'
+    ],
+    'Matematik': [
+      'Tek-Çift Sayılar','Sayı Basamakları','Asal Sayılar','Pozitif Bölen Sayısı','Değer Verme','Ardışık Sayılar',
+      'Ardışık Sayıların Toplamı','Faktöriyel','Bölme-Bölünebilme Kuralları','Rasyonel Sayılar','Ondalık Sayılar',
+      'Üslü Sayılar','Köklü Sayılar','Basit Eşitsizlik','Mutlak Değer','Birinci Dereceden Denklemler',
+      'Çarpanlara Ayırma','Oran-Orantı','Problemler','Genel Tekrar'
+    ],
+    'Tarih': [
+      'İslamiyet Öncesi Türk Tarihi','Türk İslam Tarihi','Türkiye Tarihi','Osmanlı Kültür ve Uygarlığı',
+      'Osmanlı Kuruluş Dönemi','Osmanlı Yükselme Dönemi','17. YY Osmanlı Duraklama','18. YY Osmanlı Gerileme',
+      '19. YY Osmanlı Dağılma','T.C İnkılap Tarihi ve Atatürkçülük','1. Dünya Savaşı','Kurtuluş Savaşı Hazırlık Dönemi',
+      '1. TBMM ve Kurtuluş Dönemi','Cumhuriyet Dönemi İç Politika ve Gelişmeler','Atatürk Dönemi Türk Dış Politika',
+      'Çağdaş Türk ve Dünya Tarihi','2. Dünya Savaşı','Soğuk Savaş Dönemi','Yumuşama (Detant) Dönemi ve Sonrası','Küreselleşen Dünya'
+    ],
+    'Coğrafya': [
+      'Türkiye’nin Coğrafi Konumu','Harita Bilgisi','İklim Bilgisi','Yer Şekilleri','Türkiye’de Yer Şekilleri',
+      'Nüfus ve Yerleşme','Göç','Tarım','Hayvancılık','Madenler ve Enerji Kaynakları','Sanayi','Ulaşım',
+      'Turizm','Bölgeler Coğrafyası','Çevre ve Doğa'
+    ],
+    'Vatandaşlık': [
+      'Hukukun Temel Kavramları','Anayasa','Temel Hak ve Ödevler','Yasama','Yürütme','Yargı',
+      'İdare Hukuku','Uluslararası Kuruluşlar','Güncel Hukuki Kavramlar','Karma Tekrar'
+    ]
+  };
 
-  function resetState(){
-    return {running:false, paused:false, totalQuestions:25, currentQuestion:1, sessionName:'', warnSec:120, sessionStart:0, questionStart:0, pauseStart:0, pausedAccum:0, pausedAccumQuestion:0, perQuestion:[]};
-  }
+  const tabMeta = {
+    dashboard: { label: 'Gösterge Paneli', sub: 'Özet ve hızlı durum', icon: '⌂' },
+    session: { label: 'Oturum', sub: 'Anlık süre takibi', icon: '⏱' },
+    history: { label: 'Geçmiş', sub: 'Kayıtlı çalışmalar', icon: '☰' },
+    analytics: { label: 'Analiz', sub: 'Grafik ve performans', icon: '◔' },
+    repetition: { label: 'Konu Tekrarları', sub: 'Ders bazlı tablolar', icon: '▦' },
+    resources: { label: 'Çözülen Kaynaklar', sub: 'Kaynak ve soru takibi', icon: '📚' },
+    settings: { label: 'Ayarlar', sub: 'Sekme yönetimi', icon: '⚙' },
+  };
 
-  function now(){ return Date.now(); }
-  function pad(n){ return String(n).padStart(2,'0'); }
-  function fmt(ms, tenth){
-    ms = Math.max(0, ms || 0);
-    var totalSec = ms / 1000;
-    var m = Math.floor(totalSec / 60);
-    var s = Math.floor(totalSec % 60);
-    var t = Math.floor((ms % 1000) / 100);
-    return tenth ? (pad(m)+':'+pad(s)+'.'+t) : (pad(m)+':'+pad(s));
-  }
-  function loadHistory(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
-  function saveHistory(arr){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch(e){} }
-  function safeName(s){ return String(s||'').replace(/[&<>\"]/g, function(ch){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]; }); }
-  function setStatus(s){ el.status.textContent = s; }
-
-  function totalElapsed(){
-    if(!state.sessionStart) return 0;
-    var activeNow = state.paused ? state.pauseStart : now();
-    return activeNow - state.sessionStart - state.pausedAccum;
-  }
-  function questionElapsed(){
-    if(!state.questionStart) return 0;
-    var activeNow = state.paused ? state.pauseStart : now();
-    return activeNow - state.questionStart - state.pausedAccumQuestion;
-  }
-
-  function updateStats(){
-    var sum = 0, max = 0, i;
-    for(i=0;i<state.perQuestion.length;i++){ sum += state.perQuestion[i]; if(state.perQuestion[i] > max) max = state.perQuestion[i]; }
-    var avg = state.perQuestion.length ? (sum / state.perQuestion.length) : 0;
-    el.cur.textContent = state.running ? (Math.min(state.currentQuestion, state.totalQuestions) + '/' + state.totalQuestions) : '-';
-    el.tot.textContent = fmt(totalElapsed(), false);
-    el.avg.textContent = fmt(avg, false);
-    el.max.textContent = fmt(max, false);
-    renderTimes();
-  }
-
-  function renderTimes(){
-    if(!state.perQuestion.length){ el.times.innerHTML = ''; return; }
-    var warnMs = (parseInt(state.warnSec,10) || 120) * 1000;
-    var html = '';
-    for(var i=0;i<state.perQuestion.length;i++){
-      var val = state.perQuestion[i];
-      var extra = '';
-      if(val >= warnMs * 1.5) extra = ' style="border-color:#fecaca;background:#fef2f2"';
-      else if(val >= warnMs) extra = ' style="border-color:#fde68a;background:#fffbeb"';
-      html += '<div class="item"'+extra+'><span>Soru '+(i+1)+'</span><strong>'+fmt(val,true)+'</strong></div>';
+  const state = {
+    sidebarCollapsed: false,
+    currentPanel: 'dashboard',
+    visibleTabs: { dashboard:true, session:true, history:true, analytics:true, repetition:true, resources:true, settings:true },
+    sessions: [],
+    repetitionCurrentSubject: 'Tarih',
+    repetitionData: {},
+    resources: [],
+    currentResourceId: null,
+    resourceFilterLesson: 'Hepsi',
+    currentSession: {
+      running: false,
+      startedAt: null,
+      elapsedMsCurrent: 0,
+      totalElapsedMs: 0,
+      currentQuestion: 1,
+      totalQuestions: 25,
+      studyName: '',
+      lesson: 'Türkçe',
+      type: 'Paragraf',
+      warningThreshold: 90,
+      questions: []
     }
-    el.times.innerHTML = html;
+  };
+
+  const $ = s => document.querySelector(s);
+  const byId = id => document.getElementById(id);
+  let timerInterval = null;
+
+  function ensureRepetitionData() {
+    Object.keys(repetitionTemplates).forEach(subject => {
+      if (!state.repetitionData[subject]) {
+        state.repetitionData[subject] = repetitionTemplates[subject].map((topic, i) => ({
+          id: `${subject}-${i+1}`,
+          topic,
+          r1:'', r2:'', r3:'', r4:''
+        }));
+      }
+    });
   }
 
-  function startSession(){
-    var q = parseInt(el.count.value,10);
-    var w = parseInt(el.warn.value,10);
-    if(!q || q < 1){ alert('Geçerli bir soru sayısı gir.'); return; }
-    state = resetState();
-    state.running = true;
-    state.totalQuestions = q;
-    state.warnSec = w || 120;
-    state.sessionName = (el.name.value || '').trim();
-    state.sessionStart = now();
-    state.questionStart = now();
-    el.tapBox.classList.remove('disabled');
-    el.qLabel.textContent = 'Soru 1 / ' + state.totalQuestions;
-    el.hint.textContent = 'Soruyu bitirince bu alana dokun';
-    el.pauseBtn.textContent = 'Duraklat';
-    setStatus('Çalışma başladı');
-    updateStats();
-    if(timerId) clearInterval(timerId);
-    timerId = setInterval(tick, 100);
-    tick();
+  function saveState() {
+    localStorage.setItem(appKey, JSON.stringify(state));
   }
 
-  function togglePause(){
-    if(!state.running) return;
-    if(!state.paused){
-      state.paused = true;
-      state.pauseStart = now();
-      el.pauseBtn.textContent = 'Devam et';
-      setStatus('Duraklatıldı');
+  function loadState() {
+    const raw = localStorage.getItem(appKey);
+    if (!raw) {
+      ensureRepetitionData();
+      ensureResourceData();
+      return;
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      Object.assign(state, parsed);
+      ensureRepetitionData();
+      ensureResourceData();
+    } catch (e) {
+      ensureRepetitionData();
+      ensureResourceData();
+    }
+  }
+
+  function formatMs(ms) {
+    const total = Math.floor(ms / 1000);
+    const m = String(Math.floor(total / 60)).padStart(2, '0');
+    const s = String(total % 60).padStart(2, '0');
+    return `${m}:${s}`;
+  }
+  const secs = ms => Math.round(ms / 1000);
+
+  function currentElapsedMs() {
+    if (!state.currentSession.running || !state.currentSession.startedAt) return state.currentSession.elapsedMsCurrent || 0;
+    return state.currentSession.elapsedMsCurrent + (Date.now() - state.currentSession.startedAt);
+  }
+  function totalElapsedMs() {
+    let base = state.currentSession.totalElapsedMs || 0;
+    if (state.currentSession.running && state.currentSession.startedAt) base += Date.now() - state.currentSession.startedAt;
+    return base;
+  }
+
+  function populateLessons() {
+    const lessonSelect = byId('lessonSelect');
+    lessonSelect.innerHTML = Object.keys(lessonTypes).map(v => `<option ${state.currentSession.lesson===v?'selected':''}>${v}</option>`).join('');
+    populateTypes();
+  }
+
+  function populateTypes() {
+    const lesson = byId('lessonSelect').value;
+    const typeSelect = byId('typeSelect');
+    const types = lessonTypes[lesson];
+    const selected = types.includes(state.currentSession.type) ? state.currentSession.type : types[0];
+    typeSelect.innerHTML = types.map(v => `<option ${selected===v?'selected':''}>${v}</option>`).join('');
+    state.currentSession.lesson = lesson;
+    state.currentSession.type = selected;
+  }
+
+  function buildNav() {
+    const nav = byId('nav');
+    nav.innerHTML = '';
+    Object.keys(tabMeta).forEach(key => {
+      if (!state.visibleTabs[key]) return;
+      const meta = tabMeta[key];
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn' + (state.currentPanel === key ? ' active' : '');
+      btn.innerHTML = `<div class="nav-icon">${meta.icon}</div><div><div class="nav-label">${meta.label}</div><div class="nav-sub">${meta.sub}</div></div>`;
+      btn.addEventListener('click', () => switchPanel(key));
+      nav.appendChild(btn);
+    });
+  }
+
+  function buildTabToggles(targetId) {
+    const wrap = byId(targetId);
+    wrap.innerHTML = '';
+    Object.keys(tabMeta).forEach(key => {
+      const meta = tabMeta[key];
+      const item = document.createElement('label');
+      item.className = 'toggle-item';
+      item.innerHTML = `<input type="checkbox" ${state.visibleTabs[key] ? 'checked' : ''} data-key="${key}"><span class="toggle-label">${meta.label}</span>`;
+      item.querySelector('input').addEventListener('change', (e) => {
+        state.visibleTabs[key] = e.target.checked;
+        if (!Object.values(state.visibleTabs).some(Boolean)) {
+          state.visibleTabs.dashboard = true;
+          alert('En az bir sekme açık kalmalı.');
+        }
+        if (!state.visibleTabs[state.currentPanel]) {
+          state.currentPanel = Object.keys(state.visibleTabs).find(k => state.visibleTabs[k]) || 'dashboard';
+        }
+        render();
+      });
+      wrap.appendChild(item);
+    });
+  }
+
+  function switchPanel(key) {
+    state.currentPanel = key;
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    byId(`panel-${key}`).classList.add('active');
+    buildNav();
+    saveState();
+  }
+
+  function updateTimerUI() {
+    byId('timer').textContent = formatMs(currentElapsedMs());
+    byId('totalTime').textContent = formatMs(totalElapsedMs());
+    const q = Number(byId('questionCount').value || state.currentSession.totalQuestions || 25);
+    byId('questionLabel').textContent = `Soru ${state.currentSession.currentQuestion} / ${q}`;
+    const threshold = Number(byId('warningThreshold').value || 90);
+    const box = byId('nextQuestionBtn');
+    if (secs(currentElapsedMs()) >= threshold) {
+      box.style.borderColor = '#f59e0b';
+      box.style.background = 'rgba(245,158,11,.12)';
     } else {
-      var diff = now() - state.pauseStart;
-      state.pausedAccum += diff;
-      state.pausedAccumQuestion += diff;
-      state.pauseStart = 0;
-      state.paused = false;
-      el.pauseBtn.textContent = 'Duraklat';
-      setStatus('Devam ediyor');
-      tick();
+      box.style.borderColor = '#60a5fa';
+      box.style.background = 'rgba(59,130,246,.12)';
     }
   }
 
-  function nextQuestion(){
-    if(!state.running || state.paused || tapLock) return;
-    tapLock = true;
-    setTimeout(function(){ tapLock = false; }, 250);
+  function startTimer() {
+    if (state.currentSession.running) return;
+    state.currentSession.running = true;
+    state.currentSession.startedAt = Date.now();
+    timerInterval = setInterval(updateTimerUI, 250);
+    updateTimerUI();
+    saveState();
+  }
 
-    var spent = questionElapsed();
-    state.perQuestion.push(spent);
+  function pauseTimer() {
+    if (!state.currentSession.running) return;
+    state.currentSession.elapsedMsCurrent = currentElapsedMs();
+    state.currentSession.totalElapsedMs = totalElapsedMs();
+    state.currentSession.running = false;
+    state.currentSession.startedAt = null;
+    clearInterval(timerInterval);
+    updateTimerUI();
+    saveState();
+  }
 
-    if(state.currentQuestion >= state.totalQuestions){
-      finishSession();
+  function resetCurrentSession(confirmIt = true) {
+    if (confirmIt && !confirm('Mevcut oturumu sıfırlamak istediğine emin misin?')) return;
+    clearInterval(timerInterval);
+    state.currentSession = {
+      running: false,
+      startedAt: null,
+      elapsedMsCurrent: 0,
+      totalElapsedMs: 0,
+      currentQuestion: 1,
+      totalQuestions: Number(byId('questionCount')?.value || 25),
+      studyName: byId('studyName')?.value || '',
+      lesson: byId('lessonSelect')?.value || 'Türkçe',
+      type: byId('typeSelect')?.value || 'Paragraf',
+      warningThreshold: Number(byId('warningThreshold')?.value || 90),
+      questions: []
+    };
+    byId('questionNote').value = '';
+    byId('manualQuestionNo').value = 1;
+    renderCurrentSessionList();
+    updateTimerUI();
+    saveState();
+  }
+
+  function renderCurrentSessionList() {
+    const wrap = byId('currentSessionList');
+    const items = state.currentSession.questions || [];
+    if (!items.length) {
+      wrap.innerHTML = `<div class="list-item"><div>Henüz soru kaydı yok.</div></div>`;
+      return;
+    }
+    wrap.innerHTML = items.map(item => `
+      <div class="list-item">
+        <div>
+          <div><strong>Soru ${item.no}</strong> · ${item.result === 'D' ? '<span class="badge b-ok">Doğru</span>' : item.result === 'Y' ? '<span class="badge b-bad">Yanlış</span>' : '<span class="badge b-blank">Boş</span>'}</div>
+          <div class="mini">${item.lesson} / ${item.type} · ${item.difficulty}</div>
+          ${item.note ? `<div class="mini" style="margin-top:6px">${escapeHtml(item.note)}</div>` : ''}
+        </div>
+        <div style="font-weight:700">${formatMs(item.timeMs)}</div>
+      </div>
+    `).join('');
+  }
+
+  function recordQuestion() {
+    const totalQuestions = Number(byId('questionCount').value || 25);
+    if (!state.currentSession.running) startTimer();
+
+    const questionNo = Number(byId('manualQuestionNo').value || state.currentSession.currentQuestion);
+    const item = {
+      no: questionNo,
+      result: byId('resultSelect').value,
+      difficulty: byId('difficultySelect').value,
+      note: byId('questionNote').value.trim(),
+      timeMs: currentElapsedMs(),
+      lesson: byId('lessonSelect').value,
+      type: byId('typeSelect').value,
+      at: new Date().toISOString()
+    };
+
+    state.currentSession.questions = (state.currentSession.questions || []).filter(q => q.no !== questionNo);
+    state.currentSession.questions.push(item);
+    state.currentSession.questions.sort((a,b) => a.no - b.no);
+
+    state.currentSession.totalElapsedMs = totalElapsedMs();
+    state.currentSession.elapsedMsCurrent = 0;
+    state.currentSession.startedAt = Date.now();
+    state.currentSession.currentQuestion = Math.min(totalQuestions, Math.max(questionNo + 1, state.currentSession.questions.length + 1));
+    state.currentSession.totalQuestions = totalQuestions;
+    state.currentSession.studyName = byId('studyName').value.trim();
+    state.currentSession.lesson = byId('lessonSelect').value;
+    state.currentSession.type = byId('typeSelect').value;
+    state.currentSession.warningThreshold = Number(byId('warningThreshold').value || 90);
+
+    byId('manualQuestionNo').value = state.currentSession.currentQuestion;
+    byId('questionNote').value = '';
+    renderCurrentSessionList();
+    updateTimerUI();
+    saveState();
+  }
+
+  function undoLast() {
+    const arr = state.currentSession.questions || [];
+    if (!arr.length) return;
+    const last = arr[arr.length - 1];
+    arr.pop();
+    state.currentSession.currentQuestion = last.no;
+    byId('manualQuestionNo').value = last.no;
+    state.currentSession.elapsedMsCurrent = last.timeMs;
+    state.currentSession.totalElapsedMs = Math.max(0, totalElapsedMs() - last.timeMs);
+    if (state.currentSession.running) state.currentSession.startedAt = Date.now();
+    renderCurrentSessionList();
+    updateTimerUI();
+    saveState();
+  }
+
+  function saveSession() {
+    const questions = state.currentSession.questions || [];
+    if (!questions.length) {
+      alert('Kaydedilecek soru yok.');
+      return;
+    }
+    pauseTimer();
+    const summary = summarizeCurrent();
+    state.sessions.unshift(summary);
+    saveState();
+    render();
+    alert('Oturum kaydedildi.');
+    resetCurrentSession(false);
+  }
+
+  function summarizeCurrent() {
+    const questions = state.currentSession.questions || [];
+    const correct = questions.filter(q => q.result === 'D').length;
+    const wrong = questions.filter(q => q.result === 'Y').length;
+    const blank = questions.filter(q => q.result === 'B').length;
+    const avgMs = questions.length ? Math.round(questions.reduce((a,b) => a + b.timeMs, 0) / questions.length) : 0;
+    return {
+      id: Date.now().toString(36) + Math.random().toString(36).slice(2,8),
+      date: new Date().toISOString(),
+      studyName: byId('studyName').value.trim() || `${byId('lessonSelect').value} Çalışması`,
+      lesson: byId('lessonSelect').value,
+      type: byId('typeSelect').value,
+      totalQuestions: Number(byId('questionCount').value || questions.length),
+      answeredQuestions: questions.length,
+      correct, wrong, blank,
+      net: Number((correct - wrong/4).toFixed(2)),
+      avgMs, totalMs: totalElapsedMs(),
+      warningThreshold: Number(byId('warningThreshold').value || 90),
+      questions
+    };
+  }
+
+  function renderHistory() {
+    const tbody = byId('historyBody');
+    if (!state.sessions.length) {
+      tbody.innerHTML = `<tr><td colspan="10" class="muted">Henüz geçmiş çalışma yok.</td></tr>`;
+      return;
+    }
+    tbody.innerHTML = state.sessions.map(s => `
+      <tr>
+        <td>${new Date(s.date).toLocaleString('tr-TR')}</td>
+        <td>${escapeHtml(s.studyName)}</td>
+        <td>${s.lesson} / ${s.type}</td>
+        <td>${s.answeredQuestions}/${s.totalQuestions}</td>
+        <td>${s.correct}</td>
+        <td>${s.wrong}</td>
+        <td>${s.blank}</td>
+        <td>${Number(s.net).toFixed(2)}</td>
+        <td>${secs(s.avgMs)} sn</td>
+        <td><button class="action danger" data-del="${s.id}" style="padding:8px 10px">Sil</button></td>
+      </tr>
+    `).join('');
+    tbody.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.sessions = state.sessions.filter(s => s.id !== btn.dataset.del);
+        render();
+      });
+    });
+  }
+
+  function computeStats() {
+    const sessions = state.sessions;
+    const totalQuestions = sessions.reduce((a,s) => a + (s.answeredQuestions || 0), 0);
+    const avgSec = totalQuestions ? Math.round(sessions.reduce((a,s) => a + (s.avgMs * (s.answeredQuestions || 0)), 0) / totalQuestions / 1000) : 0;
+    const avgNet = sessions.length ? (sessions.reduce((a,s) => a + Number(s.net || 0), 0) / sessions.length).toFixed(2) : '0.00';
+    byId('statSessions').textContent = sessions.length;
+    byId('statQuestions').textContent = totalQuestions;
+    byId('statAvgSec').textContent = `${avgSec} sn`;
+    byId('statNet').textContent = avgNet;
+
+    const today = new Date().toLocaleDateString('tr-TR');
+    const todaySessions = sessions.filter(s => new Date(s.date).toLocaleDateString('tr-TR') === today);
+    byId('todaySummary').textContent = todaySessions.length
+      ? `Bugün ${todaySessions.length} oturum · ${todaySessions.reduce((a,s) => a + s.answeredQuestions, 0)} soru`
+      : 'Bugün kayıt yok';
+
+    const insights = [];
+    if (!sessions.length) {
+      insights.push('Henüz kayıt yok. İlk oturumu kaydettiğinde burada özetler çıkacak.');
+    } else {
+      const latest = sessions[0];
+      insights.push(`Son çalışma: ${latest.lesson} / ${latest.type} · net ${Number(latest.net).toFixed(2)}`);
+      const slowest = [...sessions].sort((a,b) => b.avgMs - a.avgMs)[0];
+      insights.push(`En yavaş ortalama: ${slowest.lesson} / ${slowest.type} · ${secs(slowest.avgMs)} sn`);
+      const best = [...sessions].sort((a,b) => Number(b.net) - Number(a.net))[0];
+      insights.push(`En iyi net: ${best.lesson} / ${best.type} · ${Number(best.net).toFixed(2)}`);
+    }
+    byId('quickInsights').innerHTML = insights.map(t => `<div class="list-item"><div>${escapeHtml(t)}</div></div>`).join('');
+  }
+
+  function buildPerformanceTable() {
+    const map = new Map();
+    state.sessions.forEach(s => {
+      s.questions.forEach(q => {
+        const key = `${q.lesson}__${q.type}`;
+        if (!map.has(key)) map.set(key, { lesson:q.lesson, type:q.type, total:0, totalMs:0, correct:0, difficulties:{} });
+        const obj = map.get(key);
+        obj.total += 1;
+        obj.totalMs += q.timeMs;
+        if (q.result === 'D') obj.correct++;
+        obj.difficulties[q.difficulty] = (obj.difficulties[q.difficulty] || 0) + 1;
+      });
+    });
+    const rows = [...map.values()].sort((a,b) => a.lesson.localeCompare(b.lesson) || a.type.localeCompare(b.type));
+    const body = byId('performanceBody');
+    if (!rows.length) {
+      body.innerHTML = `<tr><td colspan="6" class="muted">Henüz veri yok.</td></tr>`;
+      return;
+    }
+    body.innerHTML = rows.map(r => {
+      const diff = Object.entries(r.difficulties).sort((a,b) => b[1]-a[1])[0]?.[0] || '-';
+      const accuracy = r.total ? ((r.correct / r.total) * 100).toFixed(1) : '0.0';
+      return `<tr><td>${r.lesson}</td><td>${r.type}</td><td>${r.total}</td><td>${secs(r.totalMs / r.total)} sn</td><td>%${accuracy}</td><td>${diff}</td></tr>`;
+    }).join('');
+  }
+
+  function drawLineChart(canvasId, points, label, colorStroke) {
+    const canvas = byId(canvasId);
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.fillStyle = '#09101d';
+    ctx.fillRect(0,0,w,h);
+
+    const pad = {l:52,r:18,t:24,b:42};
+    const plotW = w - pad.l - pad.r;
+    const plotH = h - pad.t - pad.b;
+    const vals = points.map(p => p.value);
+    const max = Math.max(1, ...vals);
+    const min = Math.min(0, ...vals);
+    const range = Math.max(1, max - min);
+
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    for (let i=0;i<5;i++) {
+      const y = pad.t + (plotH/4)*i;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w-pad.r, y); ctx.stroke();
+    }
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '14px sans-serif';
+    ctx.fillText(label, pad.l, 16);
+
+    if (!points.length) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('Henüz veri yok', pad.l, h/2);
       return;
     }
 
-    state.currentQuestion += 1;
-    state.questionStart = now();
-    state.pausedAccumQuestion = 0;
-    el.qLabel.textContent = 'Soru ' + state.currentQuestion + ' / ' + state.totalQuestions;
-    setStatus('Soru ' + (state.currentQuestion - 1) + ' kaydedildi');
-    updateStats();
-    tick();
-  }
-
-  function undoLast(){
-    if(!state.running || !state.perQuestion.length) return;
-    state.perQuestion.pop();
-    state.currentQuestion = Math.max(1, state.currentQuestion - 1);
-    state.questionStart = now();
-    state.pausedAccumQuestion = 0;
-    el.qLabel.textContent = 'Soru ' + state.currentQuestion + ' / ' + state.totalQuestions;
-    setStatus('Son soru geri alındı');
-    updateStats();
-    tick();
-  }
-
-  function hardReset(){
-    state = resetState();
-    if(timerId){ clearInterval(timerId); timerId = null; }
-    el.tapBox.classList.add('disabled');
-    el.timer.textContent = '00:00.0';
-    el.qLabel.textContent = 'Başlatınca soru süresi burada akar';
-    el.hint.textContent = 'Her soru bitince bu alana dokun';
-    el.pauseBtn.textContent = 'Duraklat';
-    setStatus('Hazır');
-    updateStats();
-    el.times.innerHTML = '';
-  }
-
-  function finishSession(){
-    var totalMs = totalElapsed();
-    var sum = 0, max = 0;
-    for(var i=0;i<state.perQuestion.length;i++){ sum += state.perQuestion[i]; if(state.perQuestion[i] > max) max = state.perQuestion[i]; }
-    var avg = state.perQuestion.length ? sum / state.perQuestion.length : 0;
-    var history = loadHistory();
-    history.unshift({
-      id: 'id-' + now() + '-' + Math.floor(Math.random()*1000000),
-      name: state.sessionName || ('Çalışma ' + new Date().toLocaleDateString('tr-TR')),
-      questionCount: state.totalQuestions,
-      warnSec: state.warnSec,
-      perQuestion: state.perQuestion.slice(),
-      totalMs: totalMs,
-      avgMs: avg,
-      maxMs: max,
-      createdAt: new Date().toISOString()
+    ctx.strokeStyle = colorStroke;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    points.forEach((p, i) => {
+      const x = pad.l + (points.length === 1 ? plotW/2 : (plotW/(points.length-1))*i);
+      const y = pad.t + plotH - ((p.value - min)/range)*plotH;
+      if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
     });
-    saveHistory(history);
-    renderHistory();
-    drawChart();
-    alert('Bitti.\nToplam süre: ' + fmt(totalMs,false) + '\nOrtalama soru süresi: ' + fmt(avg,false));
-    hardReset();
-  }
-
-  function renderHistory(){
-    var history = loadHistory();
-    if(!history.length){ el.history.innerHTML = '<div class="muted">Henüz kayıt yok.</div>'; return; }
-    var html = '';
-    for(var i=0;i<history.length;i++){
-      var item = history[i];
-      html += '<div class="hitem"><strong>' + safeName(item.name) + '</strong><div class="note" style="margin-top:6px">' +
-        new Date(item.createdAt).toLocaleString('tr-TR') + '</div><div class="note" style="margin-top:6px">' +
-        item.questionCount + ' soru • Toplam: ' + fmt(item.totalMs,false) + ' • Ortalama: ' + fmt(item.avgMs,false) + ' • En uzun: ' + fmt(item.maxMs,false) + '</div></div>';
-    }
-    el.history.innerHTML = html;
-  }
-
-  function drawChart(){
-    var canvas = el.chart;
-    var ctx = canvas.getContext('2d');
-    var w = canvas.width, h = canvas.height;
-    ctx.clearRect(0,0,w,h);
-    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,w,h);
-    var history = loadHistory().slice(0,20).reverse();
-    if(!history.length){ ctx.fillStyle = '#667085'; ctx.font = '16px sans-serif'; ctx.fillText('Grafik için kayıt gerekli.', 20, 34); return; }
-    var pad = {l:46,r:14,t:16,b:34};
-    var plotW = w - pad.l - pad.r, plotH = h - pad.t - pad.b;
-    var vals = [], i, max = 60;
-    for(i=0;i<history.length;i++){ vals.push(Math.round(history[i].avgMs/1000)); if(vals[i] > max) max = vals[i]; }
-    ctx.strokeStyle = '#e4e7ec'; ctx.lineWidth = 1; ctx.font = '12px sans-serif'; ctx.fillStyle = '#667085';
-    for(i=0;i<=4;i++){
-      var y = pad.t + plotH*(i/4);
-      ctx.beginPath(); ctx.moveTo(pad.l,y); ctx.lineTo(w-pad.r,y); ctx.stroke();
-      var label = Math.round(max - (max*i/4)); ctx.fillText(String(label), 8, y+4);
-    }
-    ctx.strokeStyle = '#98a2b3';
-    ctx.beginPath(); ctx.moveTo(pad.l,pad.t); ctx.lineTo(pad.l,h-pad.b); ctx.lineTo(w-pad.r,h-pad.b); ctx.stroke();
-    var stepX = history.length===1 ? plotW/2 : plotW/(history.length-1);
-    ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2; ctx.beginPath();
-    for(i=0;i<history.length;i++){
-      var x = pad.l + (history.length===1 ? plotW/2 : stepX*i);
-      var y2 = pad.t + plotH*(1 - (vals[i]/max));
-      if(i===0) ctx.moveTo(x,y2); else ctx.lineTo(x,y2);
-    }
     ctx.stroke();
-    for(i=0;i<history.length;i++){
-      var x2 = pad.l + (history.length===1 ? plotW/2 : stepX*i);
-      var y3 = pad.t + plotH*(1 - (vals[i]/max));
-      ctx.beginPath(); ctx.arc(x2,y3,4,0,Math.PI*2); ctx.fillStyle = '#16a34a'; ctx.fill();
-      ctx.fillStyle = '#667085'; ctx.fillText(String(i+1), x2-4, h-12);
+
+    points.forEach((p, i) => {
+      const x = pad.l + (points.length === 1 ? plotW/2 : (plotW/(points.length-1))*i);
+      const y = pad.t + plotH - ((p.value - min)/range)*plotH;
+      ctx.fillStyle = colorStroke;
+      ctx.beginPath(); ctx.arc(x,y,4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px sans-serif';
+      const short = p.label.length > 10 ? p.label.slice(0,10)+'…' : p.label;
+      ctx.fillText(short, x-18, h-16);
+    });
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '12px sans-serif';
+    ctx.fillText(String(max), 12, pad.t + 6);
+    ctx.fillText(String(min), 12, pad.t + plotH);
+  }
+
+  function renderCharts() {
+    const recent = [...state.sessions].slice(0,10).reverse();
+    drawLineChart('dashboardChart', recent.map(s => ({label:s.lesson, value:secs(s.avgMs)})), 'Ortalama süre (sn)', '#60a5fa');
+    drawLineChart('avgChart', recent.map(s => ({label:s.type, value:secs(s.avgMs)})), 'Soru başına ortalama süre', '#38bdf8');
+    drawLineChart('netChart', recent.map(s => ({label:s.type, value:Number(s.net)})), 'Net', '#22c55e');
+  }
+
+  function renderRepetitionTabs() {
+    const wrap = byId('repSubjectTabs');
+    wrap.innerHTML = '';
+    Object.keys(repetitionTemplates).forEach(subject => {
+      const btn = document.createElement('button');
+      btn.className = 'subject-tab' + (state.repetitionCurrentSubject === subject ? ' active' : '');
+      btn.textContent = subject;
+      btn.addEventListener('click', () => {
+        state.repetitionCurrentSubject = subject;
+        renderRepetitionSection();
+        saveState();
+      });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderRepetitionSection() {
+    renderRepetitionTabs();
+    byId('repeatLessonName').textContent = state.repetitionCurrentSubject.toUpperCase();
+    const rows = state.repetitionData[state.repetitionCurrentSubject] || [];
+    const body = byId('repeatTableBody');
+    body.innerHTML = rows.map((row, idx) => `
+      <tr data-id="${row.id}">
+        <td class="col-no">${idx + 1}.</td>
+        <td class="col-topic"><input data-field="topic" value="${escapeAttr(row.topic)}"></td>
+        <td><input data-field="r1" value="${escapeAttr(row.r1)}" placeholder="gg.aa.yyyy"></td>
+        <td><input data-field="r2" value="${escapeAttr(row.r2)}" placeholder="gg.aa.yyyy"></td>
+        <td><input data-field="r3" value="${escapeAttr(row.r3)}" placeholder="gg.aa.yyyy"></td>
+        <td><input data-field="r4" value="${escapeAttr(row.r4)}" placeholder="gg.aa.yyyy"></td>
+      </tr>
+    `).join('');
+
+    body.querySelectorAll('input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const tr = e.target.closest('tr');
+        const row = rows.find(r => r.id === tr.dataset.id);
+        if (!row) return;
+        row[e.target.dataset.field] = e.target.value;
+        saveState();
+        updateRepetitionSummary();
+      });
+    });
+
+    updateRepetitionSummary();
+  }
+
+  function updateRepetitionSummary() {
+    const rows = state.repetitionData[state.repetitionCurrentSubject] || [];
+    let started = 0, completed = 0, empty = 0;
+    rows.forEach(r => {
+      const count = ['r1','r2','r3','r4'].filter(k => (r[k] || '').trim()).length;
+      if (count > 0) started++;
+      if (count === 4) completed++;
+      if (count === 0) empty++;
+    });
+    byId('repTotalTopics').textContent = rows.length;
+    byId('repStartedTopics').textContent = started;
+    byId('repCompletedTopics').textContent = completed;
+    byId('repEmptyTopics').textContent = empty;
+  }
+
+  function addNewTopic() {
+    const subject = state.repetitionCurrentSubject;
+    const name = prompt('Yeni konu adı:');
+    if (!name || !name.trim()) return;
+    state.repetitionData[subject].push({
+      id: `${subject}-${Date.now()}`,
+      topic: name.trim(),
+      r1:'', r2:'', r3:'', r4:''
+    });
+    renderRepetitionSection();
+    saveState();
+  }
+
+  function resetCurrentSubject() {
+    const subject = state.repetitionCurrentSubject;
+    if (!confirm(`${subject} dersinin tekrar tablosu sıfırlansın mı?`)) return;
+    state.repetitionData[subject] = repetitionTemplates[subject].map((topic, i) => ({
+      id: `${subject}-${i+1}-${Date.now()}`,
+      topic, r1:'', r2:'', r3:'', r4:''
+    }));
+    renderRepetitionSection();
+    saveState();
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  function escapeAttr(text) {
+    return String(text ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+
+  
+  function ensureResourceData() {
+    if (!Array.isArray(state.resources)) state.resources = [];
+  }
+
+  function getResourceLessons() {
+    return ['Türkçe','Matematik','Tarih','Coğrafya','Vatandaşlık'];
+  }
+
+  function makeEmptyResource() {
+    return {
+      id: 'res-' + Date.now() + '-' + Math.random().toString(36).slice(2,6),
+      lesson: 'Türkçe',
+      source: 'Yeni Kaynak',
+      publisher: '',
+      note: '',
+      topics: [
+        { id: 'top-' + Date.now() + '-1', title: 'Konu 1', target: 0, solved: 0, status: 'Başlanmadı', note: '' },
+        { id: 'top-' + Date.now() + '-2', title: 'Konu 2', target: 0, solved: 0, status: 'Başlanmadı', note: '' },
+        { id: 'top-' + Date.now() + '-3', title: 'Konu 3', target: 0, solved: 0, status: 'Başlanmadı', note: '' },
+        { id: 'top-' + Date.now() + '-4', title: 'Konu 4', target: 0, solved: 0, status: 'Başlanmadı', note: '' }
+      ]
+    };
+  }
+
+  function resourceTotals(res) {
+    const topics = res.topics || [];
+    const target = topics.reduce((a,t) => a + Number(t.target || 0), 0);
+    const solved = topics.reduce((a,t) => a + Number(t.solved || 0), 0);
+    const progress = target > 0 ? Math.min(100, Math.round((solved / target) * 100)) : 0;
+    return { target, solved, progress };
+  }
+
+  function renderResourceSection() {
+    ensureResourceData();
+    const listView = byId('resourceListView');
+    const detailView = byId('resourceDetailView');
+    const backBtn = byId('backToResourceListBtn');
+
+    if (!state.currentResourceId) {
+      listView.style.display = '';
+      detailView.style.display = 'none';
+      backBtn.style.display = 'none';
+      renderResourceLessonTabs();
+      renderResourceCards();
+      updateResourceSummary();
+    } else {
+      listView.style.display = 'none';
+      detailView.style.display = '';
+      backBtn.style.display = '';
+      renderResourceDetail();
     }
   }
 
-  function exportHistory(){
-    var data = JSON.stringify(loadHistory(), null, 2);
-    var blob = new Blob([data], {type:'application/json'});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = 'soru-sayac-gecmis.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 500);
+  
+  function renderResourceLessonTabs() {
+    const wrap = byId('resourceLessonTabs');
+    const lessons = ['Hepsi', ...getResourceLessons()];
+    wrap.innerHTML = lessons.map(lesson => `
+      <button class="subject-tab ${state.resourceFilterLesson === lesson ? 'active' : ''}" data-resource-lesson="${lesson}">
+        ${lesson}
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-resource-lesson]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.resourceFilterLesson = btn.dataset.resourceLesson;
+        renderResourceSection();
+        saveState();
+      });
+    });
   }
 
-  function importHistory(file){
-    var reader = new FileReader();
-    reader.onload = function(){
-      try{
-        var arr = JSON.parse(reader.result);
-        if(!Array.isArray(arr)) throw new Error('bad');
-        saveHistory(arr.concat(loadHistory()));
-        renderHistory(); drawChart();
-        alert('Veriler içe aktarıldı.');
-      } catch(e){ alert('Geçerli bir JSON dosyası seç.'); }
+  function renderResourceCards() {
+    const wrap = byId('resourceCards');
+    const rows = state.resources || [];
+    const filtered = state.resourceFilterLesson === 'Hepsi'
+      ? rows
+      : rows.filter(r => r.lesson === state.resourceFilterLesson);
+
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="card"><div class="muted">Henüz kaynak yok. “Yeni Kaynak Ekle” ile başlayabilirsin.</div></div>';
+      return;
+    }
+    if (!filtered.length) {
+      wrap.innerHTML = '<div class="card"><div class="muted">Bu ders için henüz kaynak yok.</div></div>';
+      return;
+    }
+
+    wrap.innerHTML = filtered.map(row => {
+      const totals = resourceTotals(row);
+      return `
+        <div class="card resource-card-click" data-open-resource="${row.id}">
+          <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start">
+            <div>
+              <h3 style="margin-bottom:4px">${escapeHtml(row.source || 'Adsız Kaynak')}</h3>
+              <div class="mini">${escapeHtml(row.lesson || '-')} ${row.publisher ? '· ' + escapeHtml(row.publisher) : ''}</div>
+            </div>
+            <span class="badge ${totals.progress >= 100 ? 'b-ok' : totals.progress > 0 ? 'b-blank' : 'b-bad'}">%${totals.progress}</span>
+          </div>
+          <div style="margin-top:12px" class="progress-shell"><div class="progress-fill" style="width:${totals.progress}%"></div></div>
+          <div class="row" style="margin-top:12px">
+            <div class="col-4"><div class="mini">Konu</div><div style="font-weight:700">${(row.topics || []).length}</div></div>
+            <div class="col-4"><div class="mini">Hedef</div><div style="font-weight:700">${totals.target}</div></div>
+            <div class="col-4"><div class="mini">Çözülen</div><div style="font-weight:700">${totals.solved}</div></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    wrap.querySelectorAll('[data-open-resource]').forEach(card => {
+      card.addEventListener('click', () => {
+        state.currentResourceId = card.dataset.openResource;
+        renderResourceSection();
+        saveState();
+      });
+    });
+  }
+
+  function updateResourceSummary() {
+    const rows = state.resources || [];
+    byId('resTotalRows').textContent = rows.length;
+    const totalQuestions = rows.reduce((a, r) => a + resourceTotals(r).solved, 0);
+    byId('resTotalQuestions').textContent = totalQuestions;
+
+    const lessonTotals = {};
+    const sourceTotals = {};
+    rows.forEach(r => {
+      const totals = resourceTotals(r);
+      lessonTotals[r.lesson] = (lessonTotals[r.lesson] || 0) + totals.solved;
+      const key = r.source?.trim() || 'Adsız';
+      sourceTotals[key] = (sourceTotals[key] || 0) + totals.solved;
+    });
+
+    const topLesson = Object.entries(lessonTotals).sort((a,b) => b[1]-a[1])[0];
+    const topSource = Object.entries(sourceTotals).sort((a,b) => b[1]-a[1])[0];
+    byId('resTopLesson').textContent = topLesson ? topLesson[0] : '-';
+    byId('resTopSource').textContent = topSource ? topSource[0] : '-';
+  }
+
+  function getCurrentResource() {
+    return (state.resources || []).find(r => r.id === state.currentResourceId) || null;
+  }
+
+  function updateResourceDetailSummaryOnly() {
+    const res = getCurrentResource();
+    if (!res) return;
+    const totals = resourceTotals(res);
+    byId('detailTitle').textContent = (res.source || 'Kaynak') + ' · Konu Detayları';
+    byId('detailTopicCount').textContent = (res.topics || []).length;
+    byId('detailTargetTotal').textContent = totals.target;
+    byId('detailSolvedTotal').textContent = totals.solved;
+    byId('detailProgress').textContent = `%${totals.progress}`;
+    updateResourceSummary();
+    renderResourceCards();
+  }
+
+  function renderResourceDetail() {
+    const res = getCurrentResource();
+    if (!res) {
+      state.currentResourceId = null;
+      renderResourceSection();
+      return;
+    }
+
+    byId('detailLesson').innerHTML = getResourceLessons().map(lesson => `<option value="${lesson}" ${res.lesson===lesson?'selected':''}>${lesson}</option>`).join('');
+    byId('detailLesson').value = res.lesson || 'Türkçe';
+    byId('detailSourceName').value = res.source || '';
+    byId('detailPublisher').value = res.publisher || '';
+    byId('detailResourceNote').value = res.note || '';
+    byId('detailTitle').textContent = (res.source || 'Kaynak') + ' · Konu Detayları';
+
+    const totals = resourceTotals(res);
+    byId('detailTopicCount').textContent = (res.topics || []).length;
+    byId('detailTargetTotal').textContent = totals.target;
+    byId('detailSolvedTotal').textContent = totals.solved;
+    byId('detailProgress').textContent = `%${totals.progress}`;
+
+    const body = byId('resourceTopicBody');
+    const topics = res.topics || [];
+    if (!topics.length) {
+      body.innerHTML = `<tr><td colspan="7" class="muted">Henüz konu yok.</td></tr>`;
+    } else {
+      body.innerHTML = topics.map((t, idx) => `
+        <tr data-topic-id="${t.id}">
+          <td>${idx + 1}</td>
+          <td><input data-field="title" value="${escapeAttr(t.title)}" placeholder="Konu başlığı"></td>
+          <td><input data-field="target" type="number" min="0" value="${Number(t.target || 0)}"></td>
+          <td><input data-field="solved" type="number" min="0" value="${Number(t.solved || 0)}"></td>
+          <td>
+            <select data-field="status">
+              ${['Başlanmadı','Devam Ediyor','Bitti'].map(s => `<option value="${s}" ${t.status===s?'selected':''}>${s}</option>`).join('')}
+            </select>
+          </td>
+          <td><input data-field="note" value="${escapeAttr(t.note)}" placeholder="Not"></td>
+          <td><button class="action danger" data-del-topic="${t.id}" style="padding:8px 10px">Sil</button></td>
+        </tr>
+      `).join('');
+    }
+
+    body.querySelectorAll('input, select').forEach(el => {
+      const handler = (e) => {
+        const tr = e.target.closest('tr');
+        const topic = topics.find(x => x.id === tr.dataset.topicId);
+        if (!topic) return;
+        const field = e.target.dataset.field;
+        topic[field] = ['target','solved'].includes(field) ? Number(e.target.value || 0) : e.target.value;
+        updateResourceDetailSummaryOnly();
+        saveState();
+      };
+      el.addEventListener('input', handler);
+      el.addEventListener('change', handler);
+    });
+
+    body.querySelectorAll('[data-del-topic]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        res.topics = res.topics.filter(t => t.id !== btn.dataset.delTopic);
+        renderResourceDetail();
+        saveState();
+      });
+    });
+  }
+
+  function addResourceCard() {
+    ensureResourceData();
+    const item = makeEmptyResource();
+    state.resources.unshift(item);
+    state.currentResourceId = item.id;
+    renderResourceSection();
+    saveState();
+  }
+
+  function backToResourceList() {
+    state.currentResourceId = null;
+    renderResourceSection();
+    saveState();
+  }
+
+  function saveCurrentResourceMeta() {
+    const res = getCurrentResource();
+    if (!res) return;
+    res.lesson = byId('detailLesson').value;
+    res.source = byId('detailSourceName').value.trim() || 'Adsız Kaynak';
+    res.publisher = byId('detailPublisher').value.trim();
+    res.note = byId('detailResourceNote').value.trim();
+    renderResourceDetail();
+    saveState();
+  }
+
+  function addTopicRow() {
+    const res = getCurrentResource();
+    if (!res) return;
+    res.topics.push({
+      id: 'top-' + Date.now() + '-' + Math.random().toString(36).slice(2,5),
+      title: `Konu ${(res.topics || []).length + 1}`,
+      target: 0,
+      solved: 0,
+      status: 'Başlanmadı',
+      note: ''
+    });
+    renderResourceDetail();
+    saveState();
+  }
+
+  function deleteCurrentResource() {
+    const res = getCurrentResource();
+    if (!res) return;
+    if (!confirm('Bu kaynak silinsin mi?')) return;
+    state.resources = state.resources.filter(r => r.id !== res.id);
+    state.currentResourceId = null;
+    renderResourceSection();
+    saveState();
+  }
+
+  function clearResourceRows() {
+    if (!confirm('Tüm kaynak kayıtları silinsin mi?')) return;
+    state.resources = [];
+    state.currentResourceId = null;
+    renderResourceSection();
+    saveState();
+  }
+
+
+
+  function exportData() {
+    const blob = new Blob([JSON.stringify({
+      exportedAt: new Date().toISOString(),
+      data: state
+    }, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'kpss-calisma-verileri.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function importData(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const obj = JSON.parse(reader.result);
+        if (obj.data) {
+          Object.assign(state, obj.data);
+          ensureRepetitionData();
+          render();
+          alert('Veri içe aktarıldı.');
+        } else {
+          alert('Uygun veri bulunamadı.');
+        }
+      } catch {
+        alert('Dosya okunamadı.');
+      }
     };
     reader.readAsText(file);
   }
 
-  function tick(){
-    if(!state.running) return;
-    el.timer.textContent = fmt(questionElapsed(), true);
-    el.tot.textContent = fmt(totalElapsed(), false);
+  function hydrateInputs() {
+    byId('studyName').value = state.currentSession.studyName || '';
+    byId('questionCount').value = state.currentSession.totalQuestions || 25;
+    byId('warningThreshold').value = state.currentSession.warningThreshold || 90;
+    byId('manualQuestionNo').value = state.currentSession.currentQuestion || 1;
   }
 
-  function handleTap(ev){
-    if(ev){ ev.preventDefault(); ev.stopPropagation(); }
-    nextQuestion();
+  function bindEvents() {
+    byId('collapseBtn').addEventListener('click', () => {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      render();
+    });
+    byId('lessonSelect').addEventListener('change', () => { populateTypes(); saveState(); });
+    byId('typeSelect').addEventListener('change', saveState);
+    byId('studyName').addEventListener('input', saveState);
+    byId('questionCount').addEventListener('input', () => { updateTimerUI(); saveState(); });
+    byId('warningThreshold').addEventListener('input', () => { updateTimerUI(); saveState(); });
+
+    byId('startBtn').addEventListener('click', startTimer);
+    byId('pauseBtn').addEventListener('click', pauseTimer);
+    byId('undoBtn').addEventListener('click', undoLast);
+    byId('resetBtn').addEventListener('click', () => resetCurrentSession(true));
+    byId('nextQuestionBtn').addEventListener('click', recordQuestion);
+    byId('saveSessionBtn').addEventListener('click', saveSession);
+
+    byId('exportBtn').addEventListener('click', exportData);
+    byId('importBtn').addEventListener('click', () => byId('importFile').click());
+    byId('importFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) importData(file);
+      e.target.value = '';
+    });
+    byId('clearHistoryBtn').addEventListener('click', () => {
+      if (!confirm('Tüm geçmiş silinsin mi?')) return;
+      state.sessions = [];
+      render();
+    });
+
+    byId('addTopicBtn').addEventListener('click', addNewTopic);
+    byId('resetCurrentSubjectBtn').addEventListener('click', resetCurrentSubject);
+    byId('addResourceCardBtn').addEventListener('click', addResourceCard);
+    byId('clearResourcesBtn').addEventListener('click', clearResourceRows);
+    byId('backToResourceListBtn').addEventListener('click', backToResourceList);
+    byId('saveResourceMetaBtn').addEventListener('click', saveCurrentResourceMeta);
+    byId('addTopicRowBtn').addEventListener('click', addTopicRow);
+    byId('deleteCurrentResourceBtn').addEventListener('click', deleteCurrentResource);
+
+    window.addEventListener('beforeunload', saveState);
   }
 
-  el.startBtn.addEventListener('click', startSession);
-  el.pauseBtn.addEventListener('click', togglePause);
-  el.undoBtn.addEventListener('click', undoLast);
-  el.resetBtn.addEventListener('click', hardReset);
-  el.exportBtn.addEventListener('click', exportHistory);
-  el.importBtn.addEventListener('click', function(){ el.fileInput.click(); });
-  el.fileInput.addEventListener('change', function(e){ var f = e.target.files && e.target.files[0]; if(f) importHistory(f); e.target.value=''; });
-  el.clearBtn.addEventListener('click', function(){ if(confirm('Tüm kayıtlı çalışmaları silmek istiyor musun?')){ saveHistory([]); renderHistory(); drawChart(); } });
-  el.installNoteBtn.addEventListener('click', function(){ alert('Safari ile aç. Paylaş menüsünden “Ana Ekrana Ekle” seç. WhatsApp veya Dosyalar içindeki önizlemede değil, doğrudan Safari içinde kullan.'); });
+  function render() {
+    const sidebar = byId('sidebar');
+    sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
+    buildNav();
+    buildTabToggles('tabToggles');
+    buildTabToggles('settingsToggles');
 
-  el.tapBox.addEventListener('click', handleTap, false);
-  el.tapBox.addEventListener('pointerup', handleTap, false);
-  el.tapBox.addEventListener('touchend', handleTap, {passive:false});
-  el.tapBox.addEventListener('keyup', function(e){ if(e.key === 'Enter' || e.key === ' '){ handleTap(e); } });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    const active = byId(`panel-${state.currentPanel}`) || byId('panel-dashboard');
+    active.classList.add('active');
 
-  hardReset();
-  renderHistory();
-  drawChart();
+    populateLessons();
+    hydrateInputs();
+    renderCurrentSessionList();
+    renderHistory();
+    computeStats();
+    buildPerformanceTable();
+    renderCharts();
+    renderRepetitionSection();
+    renderResourceSection();
+    updateTimerUI();
+    saveState();
+  }
+
+  loadState();
+  document.addEventListener('DOMContentLoaded', () => {
+    populateLessons();
+    bindEvents();
+    render();
+    if (state.currentSession.running) {
+      state.currentSession.startedAt = Date.now();
+      startTimer();
+    }
+  });
 })();
 </script>
 </body>
