@@ -192,6 +192,13 @@
     .resource-card-click:hover{transform:translateY(-2px);border-color:#3b82f6}
     .progress-shell{height:10px;background:#0b1220;border:1px solid var(--border);border-radius:999px;overflow:hidden}
     .progress-fill{height:100%;background:var(--accent)}
+    .drag-handle{cursor:grab;padding:6px 8px;border-radius:8px;background:#1f2937;color:#fff;font-size:14px;display:inline-block}
+    .tiny-btn{
+      border:none;border-radius:8px;padding:6px 8px;cursor:pointer;color:#fff;background:#374151;font-size:12px;
+    }
+    .topic-add-box{
+      display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr 2fr auto;gap:8px;align-items:end;margin-bottom:12px;
+    }
 
     .resource-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
     .resource-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px}
@@ -230,8 +237,13 @@
     <div class="section-title">Sekmeler</div>
     <nav class="nav" id="nav"></nav>
 
-    <div class="section-title">Sekme Yönetimi</div>
-    <div class="toggle-list" id="tabToggles"></div>
+    <button id="settingsToggleBtn" style="width:100%;background:none;border:none;color:inherit;text-align:left;padding:8px 6px;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center">
+      <span>Sekme Yönetimi</span>
+      <span id="settingsChevron">▴</span>
+    </button>
+    <div id="settingsBody" style="display:none">
+      <div class="toggle-list" id="tabToggles"></div>
+    </div>
   </aside>
   <div class="mobile-overlay" id="mobileOverlay"></div>
   <button class="mobile-menu-btn" id="mobileMenuBtn">Menü</button>
@@ -503,13 +515,46 @@
                   <div class="card"><h4>İlerleme</h4><div class="stat" id="detailProgress">0%</div></div>
                 </div>
                 <div class="resource-toolbar">
-                  <button class="action secondary" id="addTopicRowBtn">Yeni Konu Ekle</button>
+                  <button class="action secondary" id="addTopicRowBtn">Boş Konu Satırı Ekle</button>
+                </div>
+                <div class="card" style="margin-bottom:12px">
+                  <h4>Serbest konu ekle</h4>
+                  <div class="topic-add-box">
+                    <div>
+                      <label>Konu adı</label>
+                      <input id="newTopicTitle" placeholder="Örn: Paragrafta Ana Düşünce">
+                    </div>
+                    <div>
+                      <label>Hedef</label>
+                      <input id="newTopicTarget" type="number" min="0" value="0">
+                    </div>
+                    <div>
+                      <label>Çözülen</label>
+                      <input id="newTopicSolved" type="number" min="0" value="0">
+                    </div>
+                    <div>
+                      <label>Durum</label>
+                      <select id="newTopicStatus">
+                        <option>Başlanmadı</option>
+                        <option>Devam Ediyor</option>
+                        <option>Bitti</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label>Not</label>
+                      <input id="newTopicNote" placeholder="İsteğe bağlı not">
+                    </div>
+                    <div>
+                      <button class="action success" id="addCustomTopicBtn">Ekle</button>
+                    </div>
+                  </div>
                 </div>
                 <div style="overflow:auto">
                   <table>
                     <thead>
                       <tr>
                         <th>No</th>
+                        <th>Sıra</th>
                         <th>Konu Başlığı</th>
                         <th>Hedef Soru</th>
                         <th>Çözülen Soru</th>
@@ -608,6 +653,7 @@
   const state = {
     sidebarCollapsed: false,
     mobileSidebarOpen: false,
+    settingsOpen: false,
     currentPanel: 'dashboard',
     visibleTabs: { dashboard:true, session:true, history:true, analytics:true, repetition:true, resources:true, settings:true },
     sessions: [],
@@ -784,6 +830,7 @@
     window.addEventListener('resize', () => {
       if (!isMobileView()) state.mobileSidebarOpen = false;
       applyMobileSidebarState();
+    applySettingsMenu();
     });
   }
 
@@ -1428,11 +1475,18 @@
     const body = byId('resourceTopicBody');
     const topics = res.topics || [];
     if (!topics.length) {
-      body.innerHTML = `<tr><td colspan="7" class="muted">Henüz konu yok.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="8" class="muted">Henüz konu yok.</td></tr>`;
     } else {
       body.innerHTML = topics.map((t, idx) => `
         <tr data-topic-id="${t.id}">
           <td>${idx + 1}</td>
+          <td>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span class="drag-handle">☰</span>
+              <button class="tiny-btn" data-move-up="${t.id}">▲</button>
+              <button class="tiny-btn" data-move-down="${t.id}">▼</button>
+            </div>
+          </td>
           <td><input data-field="title" value="${escapeAttr(t.title)}" placeholder="Konu başlığı"></td>
           <td><input data-field="target" type="number" min="0" value="${Number(t.target || 0)}"></td>
           <td><input data-field="solved" type="number" min="0" value="${Number(t.solved || 0)}"></td>
@@ -1446,6 +1500,13 @@
         </tr>
       `).join('');
     }
+
+    body.querySelectorAll('[data-move-up]').forEach(btn => {
+      btn.addEventListener('click', () => moveTopic(btn.dataset.moveUp, -1));
+    });
+    body.querySelectorAll('[data-move-down]').forEach(btn => {
+      btn.addEventListener('click', () => moveTopic(btn.dataset.moveDown, 1));
+    });
 
     body.querySelectorAll('input, select').forEach(el => {
       const handler = (e) => {
@@ -1468,6 +1529,71 @@
         saveState();
       });
     });
+
+    initTopicDrag();
+  }
+
+
+
+
+  function initTopicDrag() {
+    const body = byId('resourceTopicBody');
+    const res = getCurrentResource();
+    if (!body || !res || typeof Sortable === 'undefined') return;
+    if (body._sortable) body._sortable.destroy();
+
+    body._sortable = new Sortable(body, {
+      animation: 150,
+      handle: '.drag-handle',
+      draggable: 'tr[data-topic-id]',
+      onEnd: function(evt) {
+        if (evt.oldIndex === evt.newIndex) return;
+        const arr = res.topics;
+        const moved = arr.splice(evt.oldIndex, 1)[0];
+        arr.splice(evt.newIndex, 0, moved);
+        renderResourceDetail();
+        saveState();
+      }
+    });
+  }
+
+  function moveTopic(topicId, direction) {
+    const res = getCurrentResource();
+    if (!res) return;
+    const idx = (res.topics || []).findIndex(t => t.id === topicId);
+    if (idx < 0) return;
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= res.topics.length) return;
+    const temp = res.topics[idx];
+    res.topics[idx] = res.topics[newIdx];
+    res.topics[newIdx] = temp;
+    renderResourceDetail();
+    saveState();
+  }
+
+  function addCustomTopic() {
+    const res = getCurrentResource();
+    if (!res) return;
+    const title = byId('newTopicTitle').value.trim();
+    if (!title) {
+      alert('Konu adı gir.');
+      return;
+    }
+    res.topics.push({
+      id: 'top-' + Date.now() + '-' + Math.random().toString(36).slice(2,5),
+      title,
+      target: Number(byId('newTopicTarget').value || 0),
+      solved: Number(byId('newTopicSolved').value || 0),
+      status: byId('newTopicStatus').value,
+      note: byId('newTopicNote').value.trim()
+    });
+    byId('newTopicTitle').value = '';
+    byId('newTopicTarget').value = 0;
+    byId('newTopicSolved').value = 0;
+    byId('newTopicStatus').value = 'Başlanmadı';
+    byId('newTopicNote').value = '';
+    renderResourceDetail();
+    saveState();
   }
 
   function addResourceCard() {
@@ -1613,10 +1739,27 @@
     byId('backToResourceListBtn').addEventListener('click', backToResourceList);
     byId('saveResourceMetaBtn').addEventListener('click', saveCurrentResourceMeta);
     byId('addTopicRowBtn').addEventListener('click', addTopicRow);
+    byId('addCustomTopicBtn').addEventListener('click', addCustomTopic);
     byId('deleteCurrentResourceBtn').addEventListener('click', deleteCurrentResource);
 
+    byId('settingsToggleBtn').addEventListener('click', toggleSettingsMenu);
     setupMobileControls();
     window.addEventListener('beforeunload', saveState);
+  }
+
+
+  function toggleSettingsMenu() {
+    state.settingsOpen = !state.settingsOpen;
+    applySettingsMenu();
+    saveState();
+  }
+
+  function applySettingsMenu() {
+    const body = byId('settingsBody');
+    const chevron = byId('settingsChevron');
+    if (!body || !chevron) return;
+    body.style.display = state.settingsOpen ? 'block' : 'none';
+    chevron.textContent = state.settingsOpen ? '▾' : '▴';
   }
 
   function render() {
@@ -1628,6 +1771,7 @@
       sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
     }
     applyMobileSidebarState();
+    applySettingsMenu();
     buildNav();
     buildTabToggles('tabToggles');
     buildTabToggles('settingsToggles');
@@ -1661,5 +1805,6 @@
   });
 })();
 </script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 </body>
 </html>
