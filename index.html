@@ -1103,9 +1103,20 @@
   }
 
   function selectReviewQuestion(qNo) {
+    const q = (state.currentSession.questions || []).find(item => item.no === qNo);
+    const sameQuestionClicked = state.selectedReviewQuestionNo === qNo;
+
     state.selectedReviewQuestionNo = qNo;
+
+    if (q && sameQuestionClicked) {
+      if (q.result === 'D') q.result = 'Y';
+      else if (q.result === 'Y') q.result = 'B';
+      else q.result = 'D';
+    }
+
     renderQuestionResultChips();
     renderQuestionReviewEditor();
+    renderCurrentSessionList();
     saveState();
   }
 
