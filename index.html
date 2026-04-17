@@ -196,6 +196,52 @@
     .tiny-btn{
       border:none;border-radius:8px;padding:6px 8px;cursor:pointer;color:#fff;background:#374151;font-size:12px;
     }
+
+    .q-result-wrap{display:flex;flex-wrap:wrap;gap:8px}
+    .q-chip{
+      border:none;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700;color:#fff;
+      min-width:46px;
+    }
+    
+    .q-chip.d{background:#16a34a}
+    .q-chip.y{background:#dc2626}
+    .q-chip.b{background:#6b7280}
+    .q-chip.m{background:#ca8a04}
+    .history-row-click{cursor:pointer}
+    .history-row-click:hover{background:rgba(37,99,235,.08)}
+    .review-editor{
+      margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:16px;background:#0b1220;
+    }
+    .review-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .review-col-4{grid-column:span 4}
+    .review-col-6{grid-column:span 6}
+    .review-col-8{grid-column:span 8}
+    .review-col-12{grid-column:span 12}
+    .img-preview{
+      max-width:220px;max-height:220px;border-radius:12px;border:1px solid var(--border);display:block;background:#111827;
+    }
+    .hidden-file{display:none}
+    .image-lightbox{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;
+      align-items:center;justify-content:center;padding:20px;
+    }
+    .image-lightbox.show{display:flex}
+    .lightbox-inner{position:relative;max-width:95vw;max-height:95vh}
+    .lightbox-img{
+      max-width:95vw;max-height:90vh;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:#111827;
+      display:block;
+    }
+    .lightbox-close{
+      position:absolute;top:-10px;right:-10px;border:none;border-radius:999px;width:36px;height:36px;
+      background:#fff;color:#111827;font-weight:700;cursor:pointer;
+    }
+
+
+
+    .q-chip.y{background:#b91c1c}
+    .q-chip.b{background:#b45309}
+    .q-help{font-size:13px;color:var(--muted);margin-top:8px}
+
     .topic-add-box{
       display:grid;grid-template-columns:2fr 1fr 1fr 1.2fr 2fr auto;gap:8px;align-items:end;margin-bottom:12px;
     }
@@ -317,28 +363,7 @@
             <div class="timer" id="timer">00:00</div>
             <button class="bigTap" id="nextQuestionBtn">Soruyu bitirdim, kaydet ve sonraki soruya geç</button>
 
-            <div class="row">
-              <div class="col-4">
-                <label>Sonuç</label>
-                <select id="resultSelect">
-                  <option value="D">Doğru</option>
-                  <option value="Y">Yanlış</option>
-                  <option value="B">Boş</option>
-                </select>
-              </div>
-              <div class="col-4">
-                <label>Zorluk</label>
-                <select id="difficultySelect">
-                  <option value="Kolay">Kolay</option>
-                  <option value="Orta">Orta</option>
-                  <option value="Zor">Zor</option>
-                </select>
-              </div>
-              <div class="col-4">
-                <label>Soru no (elle düzeltme)</label>
-                <input id="manualQuestionNo" type="number" min="1" value="1" />
-              </div>
-              <div class="col-12">
+            <div class="row">              <div class="col-12">
                 <label>Not</label>
                 <textarea id="questionNote" placeholder="Örn: Yer değiştirme sorusunda iki şık arasında kaldım."></textarea>
               </div>
@@ -348,6 +373,57 @@
               <button class="action success" id="saveSessionBtn">Oturumu Kaydet</button>
             </div>
             <div class="footer-note">Her soru sonunda butona bas. Oturum bitince “Oturumu Kaydet” ile geçmişe eklenir.</div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card">
+            <h3>Hızlı sonuç düzeltme</h3>
+            <div class="q-result-wrap" id="questionResultChips"></div>
+            <div class="q-help">Varsayılan: tüm sorular doğru. Bir soru numarasına tıkladıkça sıra ile Doğru → Yanlış → Boş değişir. Renkler: yeşil doğru, kırmızı yanlış, gri boş.</div>
+            <div class="review-editor" id="questionReviewEditor" style="display:none">
+              <h4 id="reviewEditorTitle">Soru detayı</h4>
+              <div class="review-grid">
+                <div class="review-col-4">
+                  <label>Sonuç</label>
+                  <select id="reviewResultSelect">
+                    <option value="D">Doğru</option>
+                    <option value="Y">Yanlış</option>
+                    <option value="B">Boş</option>
+                  </select>
+                </div>
+                <div class="review-col-4">
+                  <label>Zorlanma durumu</label>
+                  <select id="reviewStruggleSelect">
+                    <option value="">Belirtmedim</option>
+                    <option value="Zorlanmadım">Zorlanmadım</option>
+                    <option value="Biraz zorlandım">Biraz zorlandım</option>
+                    <option value="Zorlandım">Zorlandım</option>
+                  </select>
+                </div>
+                <div class="review-col-4">
+                  <label>Süre</label>
+                  <input id="reviewTimeInfo" disabled />
+                </div>
+                <div class="review-col-12">
+                  <label>Not</label>
+                  <textarea id="reviewNoteInput" placeholder="Bu soru ile ilgili not ekle"></textarea>
+                </div>
+                <div class="review-col-6">
+                  <label>Görsel</label>
+                  <div class="btn-row">
+                    <button class="action secondary" id="reviewUploadBtn">Görsel Ekle / Değiştir</button>
+                    <button class="action danger" id="reviewRemoveImageBtn">Görseli Sil</button>
+                    <input type="file" accept="image/*" id="reviewImageInput" class="hidden-file">
+                  </div>
+                </div>
+                <div class="review-col-6">
+                  <label>Önizleme</label>
+                  <img id="reviewImagePreview" class="img-preview" style="display:none;cursor:zoom-in" />
+                  <div id="reviewNoImage" class="muted">Bu soru için görsel yok.</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -387,6 +463,17 @@
             </thead>
             <tbody id="historyBody"></tbody>
           </table>
+        </div>
+        <div class="card" id="historyDetailCard" style="margin-top:14px;display:none">
+          <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap">
+            <div>
+              <h3 id="historyDetailTitle">Çalışma detayı</h3>
+              <div class="muted" id="historyDetailMeta"></div>
+            </div>
+            <button class="action secondary" id="closeHistoryDetailBtn">Detayı Kapat</button>
+          </div>
+          <div class="q-result-wrap" id="historyDetailChips" style="margin-top:12px"></div>
+          <div class="list" id="historyDetailList" style="margin-top:12px"></div>
         </div>
       </div>
     </section>
@@ -596,6 +683,15 @@
       </div>
     </section>
   </main>
+
+  <div class="image-lightbox" id="imageLightbox">
+    <div class="lightbox-inner">
+      <button class="lightbox-close" id="lightboxCloseBtn">✕</button>
+      <img id="lightboxImg" class="lightbox-img" />
+    </div>
+  </div>
+
+
 </div>
 
 <script>
@@ -654,6 +750,9 @@
     sidebarCollapsed: false,
     mobileSidebarOpen: false,
     settingsOpen: false,
+    sessionReviewMode: false,
+    selectedHistorySessionId: null,
+    selectedReviewQuestionNo: null,
     currentPanel: 'dashboard',
     visibleTabs: { dashboard:true, session:true, history:true, analytics:true, repetition:true, resources:true, settings:true },
     sessions: [],
@@ -921,6 +1020,8 @@
   function resetCurrentSession(confirmIt = true) {
     if (confirmIt && !confirm('Mevcut oturumu sıfırlamak istediğine emin misin?')) return;
     clearInterval(timerInterval);
+    state.sessionReviewMode = false;
+    state.selectedReviewQuestionNo = null;
     state.currentSession = {
       running: false,
       startedAt: null,
@@ -935,10 +1036,208 @@
       questions: []
     };
     byId('questionNote').value = '';
-    byId('manualQuestionNo').value = 1;
+    if (state.currentSession.questions.length && !state.selectedReviewQuestionNo) state.selectedReviewQuestionNo = state.currentSession.questions[0].no;
     renderCurrentSessionList();
+    renderQuestionResultChips();
+    renderQuestionReviewEditor();
     updateTimerUI();
     saveState();
+  }
+
+
+
+  function colorClassForResult(result) {
+    if (result === 'D') return 'd';
+    if (result === 'Y') return 'y';
+    if (result === 'B') return 'b';
+    return 'm';
+  }
+
+  function finishSessionForReview() {
+    pauseTimer();
+    state.sessionReviewMode = true;
+    if (!state.selectedReviewQuestionNo && state.currentSession.questions.length) state.selectedReviewQuestionNo = state.currentSession.questions[0].no;
+    renderQuestionResultChips();
+    renderCurrentSessionList();
+    saveState();
+  }
+
+  function renderHistoryDetail() {
+    const card = byId('historyDetailCard');
+    const session = (state.sessions || []).find(s => s.id === state.selectedHistorySessionId);
+    if (!session) {
+      card.style.display = 'none';
+      return;
+    }
+    card.style.display = 'block';
+    byId('historyDetailTitle').textContent = session.studyName || 'Çalışma detayı';
+    byId('historyDetailMeta').textContent = `${new Date(session.date).toLocaleString('tr-TR')} · ${session.lesson} / ${session.type} · ${session.answeredQuestions}/${session.totalQuestions} soru`;
+
+    byId('historyDetailChips').innerHTML = (session.questions || []).map(item => {
+      const cls = colorClassForResult(item.result);
+      return `<button class="q-chip ${cls}" title="Soru ${item.no}">${item.no}</button>`;
+    }).join('');
+
+    byId('historyDetailList').innerHTML = (session.questions || []).map(item => `
+      <div class="list-item">
+        <div>
+          <div><strong>Soru ${item.no}</strong> · ${
+            item.result === 'D' ? '<span class="badge b-ok">Doğru</span>' :
+            item.result === 'Y' ? '<span class="badge b-bad">Yanlış</span>' :
+            '<span class="badge b-blank">Boş</span>'
+          }</div>
+          <div class="mini">${item.lesson} / ${item.type}${item.struggle ? ' · ' + item.struggle : ''}</div>
+          ${item.note ? `<div class="mini" style="margin-top:6px">${escapeHtml(item.note)}</div>` : ''}
+          ${item.imageData ? `<div class="mini" style="margin-top:6px">Görsel eklendi</div>` : ''}
+          ${item.imageData ? `<div style="margin-top:8px"><img src="${item.imageData}" class="img-preview history-preview-click" data-full-image="${item.imageData}" style="max-width:140px;max-height:140px;cursor:zoom-in"></div>` : ''}
+        </div>
+        <div style="font-weight:700">${formatMs(item.timeMs)}</div>
+      </div>
+    `).join('');
+    bindHistoryPreviewClicks();
+  }
+
+
+  function getCurrentReviewQuestion() {
+    return (state.currentSession.questions || []).find(q => q.no === state.selectedReviewQuestionNo) || null;
+  }
+
+  function selectReviewQuestion(qNo) {
+    state.selectedReviewQuestionNo = qNo;
+    renderQuestionResultChips();
+    renderQuestionReviewEditor();
+    saveState();
+  }
+
+  function renderQuestionReviewEditor() {
+    const box = byId('questionReviewEditor');
+    const q = getCurrentReviewQuestion();
+    if (!box || !q) {
+      if (box) box.style.display = 'none';
+      return;
+    }
+    box.style.display = 'block';
+    byId('reviewEditorTitle').textContent = `Soru ${q.no} detayı`;
+    byId('reviewResultSelect').value = q.result || 'D';
+    byId('reviewStruggleSelect').value = q.struggle || '';
+    byId('reviewTimeInfo').value = formatMs(q.timeMs || 0);
+    byId('reviewNoteInput').value = q.note || '';
+    const img = byId('reviewImagePreview');
+    const noImg = byId('reviewNoImage');
+    if (q.imageData) {
+      img.src = q.imageData;
+      img.style.display = 'block';
+      noImg.style.display = 'none';
+    } else {
+      img.removeAttribute('src');
+      img.style.display = 'none';
+      noImg.style.display = 'block';
+    }
+  }
+
+
+  function openImageLightbox(src) {
+    if (!src) return;
+    byId('lightboxImg').src = src;
+    byId('imageLightbox').classList.add('show');
+  }
+
+  function closeImageLightbox() {
+    byId('imageLightbox').classList.remove('show');
+    byId('lightboxImg').removeAttribute('src');
+  }
+
+  function bindLightboxEvents() {
+    byId('lightboxCloseBtn').addEventListener('click', closeImageLightbox);
+    byId('imageLightbox').addEventListener('click', (e) => {
+      if (e.target.id === 'imageLightbox') closeImageLightbox();
+    });
+  }
+
+  function bindHistoryPreviewClicks() {
+    document.querySelectorAll('.history-preview-click').forEach(img => {
+      img.addEventListener('click', () => openImageLightbox(img.dataset.fullImage));
+    });
+  }
+
+  function bindQuestionReviewEditorEvents() {
+    byId('reviewResultSelect').addEventListener('change', (e) => {
+      const q = getCurrentReviewQuestion();
+      if (!q) return;
+      q.result = e.target.value;
+      renderQuestionResultChips();
+      renderCurrentSessionList();
+      saveState();
+    });
+    byId('reviewStruggleSelect').addEventListener('change', (e) => {
+      const q = getCurrentReviewQuestion();
+      if (!q) return;
+      q.struggle = e.target.value;
+      renderCurrentSessionList();
+      saveState();
+    });
+    byId('reviewNoteInput').addEventListener('input', (e) => {
+      const q = getCurrentReviewQuestion();
+      if (!q) return;
+      q.note = e.target.value;
+      renderCurrentSessionList();
+      saveState();
+    });
+    byId('reviewUploadBtn').addEventListener('click', () => byId('reviewImageInput').click());
+    byId('reviewImagePreview').addEventListener('click', () => {
+      const q = getCurrentReviewQuestion();
+      if (q && q.imageData) openImageLightbox(q.imageData);
+    });
+    byId('reviewImageInput').addEventListener('change', (e) => {
+      const q = getCurrentReviewQuestion();
+      const file = e.target.files && e.target.files[0];
+      if (!q || !file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        q.imageData = reader.result;
+        renderQuestionReviewEditor();
+        saveState();
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    });
+    byId('reviewRemoveImageBtn').addEventListener('click', () => {
+      const q = getCurrentReviewQuestion();
+      if (!q) return;
+      q.imageData = '';
+      renderQuestionReviewEditor();
+      saveState();
+    });
+  }
+
+  function cycleQuestionResult(qNo) {
+    const q = (state.currentSession.questions || []).find(item => item.no === qNo);
+    if (!q) return;
+    if (q.result === 'D') q.result = 'Y';
+    else if (q.result === 'Y') q.result = 'B';
+    else q.result = 'D';
+    renderQuestionResultChips();
+    renderCurrentSessionList();
+    saveState();
+  }
+
+  function renderQuestionResultChips() {
+    const wrap = byId('questionResultChips');
+    if (!wrap) return;
+    const items = state.currentSession.questions || [];
+    if (!items.length) {
+      wrap.innerHTML = '<div class="muted">Henüz soru kaydı yok.</div>';
+      return;
+    }
+    wrap.innerHTML = items.map(item => {
+      const cls = colorClassForResult(item.result);
+      const label = item.result === 'D' ? 'D' : item.result === 'Y' ? 'Y' : 'B';
+      const active = state.selectedReviewQuestionNo === item.no ? 'outline:3px solid #fff;outline-offset:2px;' : '';
+      return `<button class="q-chip ${cls}" style="${active}" data-qno="${item.no}" title="Soru ${item.no} · ${label}">${item.no}</button>`;
+    }).join('');
+    wrap.querySelectorAll('[data-qno]').forEach(btn => {
+      btn.addEventListener('click', () => selectReviewQuestion(Number(btn.dataset.qno)));
+    });
   }
 
   function renderCurrentSessionList() {
@@ -952,25 +1251,30 @@
       <div class="list-item">
         <div>
           <div><strong>Soru ${item.no}</strong> · ${item.result === 'D' ? '<span class="badge b-ok">Doğru</span>' : item.result === 'Y' ? '<span class="badge b-bad">Yanlış</span>' : '<span class="badge b-blank">Boş</span>'}</div>
-          <div class="mini">${item.lesson} / ${item.type} · ${item.difficulty}</div>
+          <div class="mini">${item.lesson} / ${item.type}${item.struggle ? ' · ' + item.struggle : ''}</div>
           ${item.note ? `<div class="mini" style="margin-top:6px">${escapeHtml(item.note)}</div>` : ''}
+          ${item.imageData ? `<div class="mini" style="margin-top:6px">Görsel eklendi</div>` : ''}
+          ${item.imageData ? `<div style="margin-top:8px"><img src="${item.imageData}" class="img-preview history-preview-click" data-full-image="${item.imageData}" style="max-width:140px;max-height:140px;cursor:zoom-in"></div>` : ''}
         </div>
         <div style="font-weight:700">${formatMs(item.timeMs)}</div>
       </div>
     `).join('');
+    bindHistoryPreviewClicks();
   }
 
   function recordQuestion() {
     const totalQuestions = Number(byId('questionCount').value || 25);
     if (!state.currentSession.running) startTimer();
 
-    const questionNo = Number(byId('manualQuestionNo').value || state.currentSession.currentQuestion);
+    const questionNo = Number(state.currentSession.currentQuestion || 1);
+    const qTimeMs = currentElapsedMs();
     const item = {
       no: questionNo,
-      result: byId('resultSelect').value,
-      difficulty: byId('difficultySelect').value,
+      result: 'D',
+      struggle: '',
       note: byId('questionNote').value.trim(),
-      timeMs: currentElapsedMs(),
+      imageData: '',
+      timeMs: qTimeMs,
       lesson: byId('lessonSelect').value,
       type: byId('typeSelect').value,
       at: new Date().toISOString()
@@ -983,18 +1287,24 @@
     state.currentSession.totalElapsedMs = totalElapsedMs();
     state.currentSession.elapsedMsCurrent = 0;
     state.currentSession.startedAt = Date.now();
-    state.currentSession.currentQuestion = Math.min(totalQuestions, Math.max(questionNo + 1, state.currentSession.questions.length + 1));
+    state.currentSession.currentQuestion = Math.min(totalQuestions, questionNo + 1);
     state.currentSession.totalQuestions = totalQuestions;
     state.currentSession.studyName = byId('studyName').value.trim();
     state.currentSession.lesson = byId('lessonSelect').value;
     state.currentSession.type = byId('typeSelect').value;
     state.currentSession.warningThreshold = Number(byId('warningThreshold').value || 90);
 
-    byId('manualQuestionNo').value = state.currentSession.currentQuestion;
     byId('questionNote').value = '';
+    if (state.currentSession.questions.length && !state.selectedReviewQuestionNo) state.selectedReviewQuestionNo = state.currentSession.questions[0].no;
     renderCurrentSessionList();
+    renderQuestionResultChips();
+    renderQuestionReviewEditor();
     updateTimerUI();
     saveState();
+
+    if (state.currentSession.questions.length >= totalQuestions) {
+      finishSessionForReview();
+    }
   }
 
   function undoLast() {
@@ -1003,11 +1313,13 @@
     const last = arr[arr.length - 1];
     arr.pop();
     state.currentSession.currentQuestion = last.no;
-    byId('manualQuestionNo').value = last.no;
     state.currentSession.elapsedMsCurrent = last.timeMs;
     state.currentSession.totalElapsedMs = Math.max(0, totalElapsedMs() - last.timeMs);
     if (state.currentSession.running) state.currentSession.startedAt = Date.now();
+    if (state.currentSession.questions.length && !state.selectedReviewQuestionNo) state.selectedReviewQuestionNo = state.currentSession.questions[0].no;
     renderCurrentSessionList();
+    renderQuestionResultChips();
+    renderQuestionReviewEditor();
     updateTimerUI();
     saveState();
   }
@@ -1021,6 +1333,7 @@
     pauseTimer();
     const summary = summarizeCurrent();
     state.sessions.unshift(summary);
+    state.sessionReviewMode = false;
     saveState();
     render();
     alert('Oturum kaydedildi.');
@@ -1056,7 +1369,7 @@
       return;
     }
     tbody.innerHTML = state.sessions.map(s => `
-      <tr>
+      <tr class="history-row-click" data-open-history="${s.id}">
         <td>${new Date(s.date).toLocaleString('tr-TR')}</td>
         <td>${escapeHtml(s.studyName)}</td>
         <td>${s.lesson} / ${s.type}</td>
@@ -1070,9 +1383,18 @@
       </tr>
     `).join('');
     tbody.querySelectorAll('[data-del]').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         state.sessions = state.sessions.filter(s => s.id !== btn.dataset.del);
+        if (state.selectedHistorySessionId === btn.dataset.del) state.selectedHistorySessionId = null;
         render();
+      });
+    });
+    tbody.querySelectorAll('[data-open-history]').forEach(row => {
+      row.addEventListener('click', () => {
+        state.selectedHistorySessionId = row.dataset.openHistory;
+        renderHistoryDetail();
+        saveState();
       });
     });
   }
@@ -1693,7 +2015,6 @@
     byId('studyName').value = state.currentSession.studyName || '';
     byId('questionCount').value = state.currentSession.totalQuestions || 25;
     byId('warningThreshold').value = state.currentSession.warningThreshold || 90;
-    byId('manualQuestionNo').value = state.currentSession.currentQuestion || 1;
   }
 
   function bindEvents() {
@@ -1726,10 +2047,18 @@
       if (file) importData(file);
       e.target.value = '';
     });
+    bindQuestionReviewEditorEvents();
+    bindLightboxEvents();
     byId('clearHistoryBtn').addEventListener('click', () => {
       if (!confirm('Tüm geçmiş silinsin mi?')) return;
       state.sessions = [];
+      state.selectedHistorySessionId = null;
       render();
+    });
+    byId('closeHistoryDetailBtn').addEventListener('click', () => {
+      state.selectedHistorySessionId = null;
+      renderHistoryDetail();
+      saveState();
     });
 
     byId('addTopicBtn').addEventListener('click', addNewTopic);
@@ -1782,8 +2111,12 @@
 
     populateLessons();
     hydrateInputs();
+    if (state.currentSession.questions.length && !state.selectedReviewQuestionNo) state.selectedReviewQuestionNo = state.currentSession.questions[0].no;
     renderCurrentSessionList();
+    renderQuestionResultChips();
+    renderQuestionReviewEditor();
     renderHistory();
+    renderHistoryDetail();
     computeStats();
     buildPerformanceTable();
     renderCharts();
