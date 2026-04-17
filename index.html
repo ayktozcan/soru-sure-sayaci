@@ -72,6 +72,15 @@
     }
     .toggle-item input{accent-color:var(--accent)}
     .main{flex:1;padding:22px}
+    .mobile-overlay{
+      display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:9;
+    }
+    .mobile-overlay.show{display:block}
+    .swipe-handle{
+      display:none;position:fixed;left:0;top:50%;transform:translateY(-50%);
+      width:18px;height:90px;border-radius:0 12px 12px 0;background:rgba(37,99,235,.45);z-index:8;
+      border:1px solid rgba(255,255,255,.15);border-left:none;
+    }
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
     .title h1{margin:0;font-size:28px}
     .title p{margin:6px 0 0;color:var(--muted)}
@@ -186,10 +195,15 @@
     @media (max-width:1000px){
       .row{grid-template-columns:repeat(6,1fr)}
       .col-4,.col-5,.col-6,.col-7,.col-8{grid-column:span 6}
-      .sidebar{position:fixed;z-index:10;transform:translateX(0)}
-      .sidebar.collapsed{transform:translateX(-100%)}
+      .sidebar{
+        position:fixed;z-index:10;left:0;top:0;bottom:0;
+        width:290px !important;padding:18px 14px !important;
+        transform:translateX(-100%);
+      }
+      .sidebar.mobile-open{transform:translateX(0)}
       .main{padding:16px;margin-left:0}
       .two-col{grid-template-columns:1fr}
+      .swipe-handle{display:block}
     }
   </style>
 </head>
@@ -211,6 +225,8 @@
     <div class="section-title">Sekme Yönetimi</div>
     <div class="toggle-list" id="tabToggles"></div>
   </aside>
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+  <div class="swipe-handle" id="swipeHandle" aria-hidden="true"></div>
 
   <main class="main">
     <div class="topbar">
@@ -582,6 +598,7 @@
 
   const state = {
     sidebarCollapsed: false,
+    mobileSidebarOpen: false,
     currentPanel: 'dashboard',
     visibleTabs: { dashboard:true, session:true, history:true, analytics:true, repetition:true, resources:true, settings:true },
     sessions: [],
@@ -677,6 +694,96 @@
     state.currentSession.type = selected;
   }
 
+
+  function isMobileView() {
+    return window.innerWidth <= 1000;
+  }
+
+  function openMobileSidebar() {
+    state.mobileSidebarOpen = true;
+    const sidebar = byId('sidebar');
+    const overlay = byId('mobileOverlay');
+    sidebar.classList.add('mobile-open');
+    overlay.classList.add('show');
+    saveState();
+  }
+
+  function closeMobileSidebar() {
+    state.mobileSidebarOpen = false;
+    const sidebar = byId('sidebar');
+    const overlay = byId('mobileOverlay');
+    sidebar.classList.remove('mobile-open');
+    overlay.classList.remove('show');
+    saveState();
+  }
+
+  function applyMobileSidebarState() {
+    const sidebar = byId('sidebar');
+    const overlay = byId('mobileOverlay');
+    if (!isMobileView()) {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('show');
+      return;
+    }
+    if (state.mobileSidebarOpen) {
+      sidebar.classList.add('mobile-open');
+      overlay.classList.add('show');
+    } else {
+      sidebar.classList.remove('mobile-open');
+      overlay.classList.remove('show');
+    }
+  }
+
+  function setupSwipeControls() {
+    const handle = byId('swipeHandle');
+    const overlay = byId('mobileOverlay');
+    const sidebar = byId('sidebar');
+
+    handle.addEventListener('click', () => {
+      if (!isMobileView()) return;
+      openMobileSidebar();
+    });
+    overlay.addEventListener('click', () => {
+      if (!isMobileView()) return;
+      closeMobileSidebar();
+    });
+
+    let startX = null;
+    let activeArea = null;
+
+    document.addEventListener('touchstart', (e) => {
+      if (!isMobileView() || !e.touches.length) return;
+      startX = e.touches[0].clientX;
+      const target = e.target;
+      activeArea = sidebar.contains(target) ? 'sidebar' : 'main';
+    }, {passive:true});
+
+    document.addEventListener('touchend', (e) => {
+      if (!isMobileView() || startX === null || !e.changedTouches.length) return;
+      const endX = e.changedTouches[0].clientX;
+      const diffX = endX - startX;
+
+      if (!state.mobileSidebarOpen && startX <= 28 && diffX > 50) {
+        openMobileSidebar();
+      if (state.mobileSidebarOpen && diffX < -50 && activeArea === 'sidebar') {
+        closeMobileSidebar();
+      }
+      if (state.mobileSidebarOpen && activeArea === 'main' && diffX < -50) {
+        closeMobileSidebar();
+      }
+
+      startX = null;
+      activeArea = null;
+    }, {passive:true});
+
+    window.addEventListener('resize', () => {
+      if (!isMobileView()) {
+        state.mobileSidebarOpen = false;
+      }
+      applyMobileSidebarState();
+    });
+  }
+
   function buildNav() {
     const nav = byId('nav');
     nav.innerHTML = '';
@@ -686,7 +793,10 @@
       const btn = document.createElement('button');
       btn.className = 'nav-btn' + (state.currentPanel === key ? ' active' : '');
       btn.innerHTML = `<div class="nav-icon">${meta.icon}</div><div><div class="nav-label">${meta.label}</div><div class="nav-sub">${meta.sub}</div></div>`;
-      btn.addEventListener('click', () => switchPanel(key));
+      btn.addEventListener('click', () => {
+        switchPanel(key);
+        if (isMobileView()) closeMobileSidebar();
+      });
       nav.appendChild(btn);
     });
   }
@@ -1459,6 +1569,11 @@
 
   function bindEvents() {
     byId('collapseBtn').addEventListener('click', () => {
+      if (isMobileView()) {
+        if (state.mobileSidebarOpen) closeMobileSidebar();
+        else openMobileSidebar();
+        return;
+      }
       state.sidebarCollapsed = !state.sidebarCollapsed;
       render();
     });
@@ -1497,12 +1612,19 @@
     byId('addTopicRowBtn').addEventListener('click', addTopicRow);
     byId('deleteCurrentResourceBtn').addEventListener('click', deleteCurrentResource);
 
+    setupSwipeControls();
     window.addEventListener('beforeunload', saveState);
   }
 
   function render() {
     const sidebar = byId('sidebar');
-    sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
+    if (isMobileView()) {
+      sidebar.classList.remove('collapsed');
+    } else {
+      state.mobileSidebarOpen = false;
+      sidebar.classList.toggle('collapsed', state.sidebarCollapsed);
+    }
+    applyMobileSidebarState();
     buildNav();
     buildTabToggles('tabToggles');
     buildTabToggles('settingsToggles');
