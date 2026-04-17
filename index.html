@@ -268,12 +268,23 @@
     }
   
     @media (max-width:1000px){
-      #sessionTopGrid{display:flex !important;flex-direction:column !important;gap:14px}
+      #sessionTopGrid{
+        display:flex !important;
+        flex-direction:column !important;
+        gap:14px !important;
+      }
       #liveStatusCard{order:1}
       #sessionInfoCard{order:2}
-      #sessionTopGrid .card{width:100%}
-      #sessionInfoCard .btn-row .action,
-      #liveStatusCard .btn-row .action{flex:1}
+      #sessionTopGrid > .col-4,
+      #sessionTopGrid > .col-8,
+      #sessionTopGrid > .col-12{
+        grid-column:unset !important;
+        width:100% !important;
+      }
+      #liveStatusCard .card,
+      #sessionInfoCard .card{
+        width:100% !important;
+      }
     }
 
 </style>
@@ -335,8 +346,8 @@
     </section>
 
     <section class="panel" id="panel-session">
-      <div class="row">
-        <div class="col-4">
+      <div class="row" id="sessionTopGrid">
+        <div class="col-4" id="sessionInfoCard">
           <div class="card">
             <h3>Oturum bilgileri</h3>
             <label>Çalışma adı</label>
@@ -358,7 +369,7 @@
           </div>
         </div>
 
-        <div class="col-8">
+        <div class="col-8" id="liveStatusCard">
           <div class="card question-box">
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div>
