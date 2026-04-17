@@ -266,7 +266,17 @@
       .mobile-menu-btn,.mobile-edge-zone{display:block}
       .collapse-btn{display:none}
     }
-  </style>
+  
+    @media (max-width:1000px){
+      #sessionTopGrid{display:flex !important;flex-direction:column !important;gap:14px}
+      #liveStatusCard{order:1}
+      #sessionInfoCard{order:2}
+      #sessionTopGrid .card{width:100%}
+      #sessionInfoCard .btn-row .action,
+      #liveStatusCard .btn-row .action{flex:1}
+    }
+
+</style>
 </head>
 <body>
 <div class="app">
