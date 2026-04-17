@@ -267,24 +267,18 @@
       .collapse-btn{display:none}
     }
   
-    @media (max-width:1000px){
-      #sessionTopGrid{
-        display:flex !important;
-        flex-direction:column !important;
-        gap:14px !important;
-      }
-      #liveStatusCard{order:1}
-      #sessionInfoCard{order:2}
-      #sessionTopGrid > .col-4,
-      #sessionTopGrid > .col-8,
-      #sessionTopGrid > .col-12{
-        grid-column:unset !important;
-        width:100% !important;
-      }
-      #liveStatusCard .card,
-      #sessionInfoCard .card{
-        width:100% !important;
-      }
+    #panel-session .row{
+      display:block !important;
+    }
+    #panel-session .col-4,
+    #panel-session .col-8,
+    #panel-session .col-12{
+      width:100% !important;
+      grid-column:unset !important;
+      margin-bottom:14px !important;
+    }
+    #panel-session .btn-row .action{
+      min-width:140px;
     }
 
 </style>
@@ -346,8 +340,8 @@
     </section>
 
     <section class="panel" id="panel-session">
-      <div class="row" id="sessionTopGrid">
-        <div class="col-4" id="sessionInfoCard">
+      <div class="row">
+        <div class="col-12">
           <div class="card">
             <h3>Oturum bilgileri</h3>
             <label>Çalışma adı</label>
@@ -362,14 +356,12 @@
             <input id="warningThreshold" type="number" min="10" value="90" />
             <div class="btn-row" style="margin-top:14px">
               <button class="action" id="startBtn">Başlat</button>
-              <button class="action secondary" id="pauseBtn">Duraklat</button>
-              <button class="action warning" id="undoBtn">Geri Al</button>
               <button class="action danger" id="resetBtn">Sıfırla</button>
             </div>
           </div>
         </div>
 
-        <div class="col-8" id="liveStatusCard">
+        <div class="col-12">
           <div class="card question-box">
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div>
@@ -383,6 +375,10 @@
             </div>
             <div class="timer" id="timer">00:00</div>
             <button class="bigTap" id="nextQuestionBtn">Soruyu bitirdim, kaydet ve sonraki soruya geç</button>
+            <div class="btn-row" style="margin-top:10px">
+              <button class="action secondary" id="pauseBtn">Duraklat</button>
+              <button class="action warning" id="undoBtn">Geri Al</button>
+            </div>
 
             <div class="row">              <div class="col-12">
                 <label>Not</label>
