@@ -266,48 +266,7 @@
       .mobile-menu-btn,.mobile-edge-zone{display:block}
       .collapse-btn{display:none}
     }
-  
-    #panel-session .row{
-      display:block !important;
-    }
-    #panel-session .col-4,
-    #panel-session .col-8,
-    #panel-session .col-12{
-      width:100% !important;
-      grid-column:unset !important;
-      margin-bottom:14px !important;
-    }
-    #panel-session .btn-row .action{
-      min-width:140px;
-    }
-
-
-    #nextQuestionBtn{
-      width:100%;
-      text-align:center;
-    }
-    #panel-session .question-box .btn-row{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:center;
-    }
-    #pauseBtn,#undoBtn{
-      width:100%;
-      max-width:520px;
-      text-align:center;
-      justify-content:center;
-    }
-    #saveSessionBtn{
-      width:100%;
-      max-width:420px;
-      text-align:center;
-      justify-content:center;
-      margin:0 auto;
-      display:flex;
-    }
-
-</style>
+  </style>
 </head>
 <body>
 <div class="app">
@@ -367,7 +326,7 @@
 
     <section class="panel" id="panel-session">
       <div class="row">
-        <div class="col-12">
+        <div class="col-4">
           <div class="card">
             <h3>Oturum bilgileri</h3>
             <label>Çalışma adı</label>
@@ -382,12 +341,14 @@
             <input id="warningThreshold" type="number" min="10" value="90" />
             <div class="btn-row" style="margin-top:14px">
               <button class="action" id="startBtn">Başlat</button>
+              <button class="action secondary" id="pauseBtn">Duraklat</button>
+              <button class="action warning" id="undoBtn">Geri Al</button>
               <button class="action danger" id="resetBtn">Sıfırla</button>
             </div>
           </div>
         </div>
 
-        <div class="col-12">
+        <div class="col-8">
           <div class="card question-box">
             <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">
               <div>
@@ -401,10 +362,6 @@
             </div>
             <div class="timer" id="timer">00:00</div>
             <button class="bigTap" id="nextQuestionBtn">Soruyu bitirdim, kaydet ve sonraki soruya geç</button>
-            <div class="btn-row" style="margin-top:10px">
-              <button class="action secondary" id="pauseBtn">Duraklat</button>
-              <button class="action warning" id="undoBtn">Geri Al</button>
-            </div>
 
             <div class="row">              <div class="col-12">
                 <label>Not</label>
@@ -836,7 +793,14 @@
   }
 
   function saveState() {
-    localStorage.setItem(appKey, JSON.stringify(state));
+    try {
+      localStorage.setItem(appKey, JSON.stringify(state));
+      return true;
+    } catch (e) {
+      console.error(e);
+      alert('Kayıt başarısız oldu. Safari depolama sınırına ulaşıldı veya yaklaşıldı. Büyük görselleri daha küçük yüklemeyi dene.');
+      return false;
+    }
   }
 
   function loadState() {
@@ -1146,20 +1110,9 @@
   }
 
   function selectReviewQuestion(qNo) {
-    const q = (state.currentSession.questions || []).find(item => item.no === qNo);
-    const sameQuestionClicked = state.selectedReviewQuestionNo === qNo;
-
     state.selectedReviewQuestionNo = qNo;
-
-    if (q && sameQuestionClicked) {
-      if (q.result === 'D') q.result = 'Y';
-      else if (q.result === 'Y') q.result = 'B';
-      else q.result = 'D';
-    }
-
     renderQuestionResultChips();
     renderQuestionReviewEditor();
-    renderCurrentSessionList();
     saveState();
   }
 
@@ -1214,6 +1167,28 @@
     });
   }
 
+  function compressImageFile(file, maxW = 1200, quality = 0.72) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxW / img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function bindQuestionReviewEditorEvents() {
     byId('reviewResultSelect').addEventListener('change', (e) => {
       const q = getCurrentReviewQuestion();
@@ -1242,17 +1217,18 @@
       const q = getCurrentReviewQuestion();
       if (q && q.imageData) openImageLightbox(q.imageData);
     });
-    byId('reviewImageInput').addEventListener('change', (e) => {
+    byId('reviewImageInput').addEventListener('change', async (e) => {
       const q = getCurrentReviewQuestion();
       const file = e.target.files && e.target.files[0];
       if (!q || !file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        q.imageData = reader.result;
+      try {
+        q.imageData = await compressImageFile(file, 1200, 0.72);
         renderQuestionReviewEditor();
         saveState();
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error(err);
+        alert('Görsel yüklenemedi.');
+      }
       e.target.value = '';
     });
     byId('reviewRemoveImageBtn').addEventListener('click', () => {
